@@ -1,30 +1,45 @@
-// controls.js
 export function setupControls(plane) {
-  const speed = 0.1;
-  const turnSpeed = 0.05;
+  const keys = {
+    ArrowUp: false,
+    ArrowLeft: false,
+    ArrowRight: false,
+  };
 
-  document.addEventListener('keydown', (event) => {
-    switch (event.key) {
-      case 'ArrowUp': // Move forward
-        plane.position.z -= speed * Math.cos(plane.rotation.y);
-        plane.position.x -= speed * Math.sin(plane.rotation.y);
-        break;
-      case 'ArrowDown': // Move backward
-        plane.position.z += speed * Math.cos(plane.rotation.y);
-        plane.position.x += speed * Math.sin(plane.rotation.y);
-        break;
-      case 'ArrowLeft': // Rotate left
-        plane.rotation.y += turnSpeed;
-        break;
-      case 'ArrowRight': // Rotate right
-        plane.rotation.y -= turnSpeed;
-        break;
-      case 'w': // Move up
-        plane.position.y += speed;
-        break;
-      case 's': // Move down
-        plane.position.y -= speed;
-        break;
-    }
+  window.addEventListener("keydown", (e) => {
+    if (e.code in keys) keys[e.code] = true;
   });
+  window.addEventListener("keyup", (e) => {
+    if (e.code in keys) keys[e.code] = false;
+  });
+
+  let verticalVelocity = 0;
+  const gravity = -0.0005;    // very gentle downward pull
+  const liftStrength = 0.002; // holding UP keeps you in the air
+  const forwardSpeed = 0.05;   // constant forward movement
+
+  return function updateControls() {
+    // Apply lift when UP is pressed
+    if (keys.ArrowUp) {
+      verticalVelocity += liftStrength;
+    }
+
+    // Apply gravity
+    verticalVelocity += gravity;
+
+    // Update vertical position
+    plane.position.y += verticalVelocity;
+
+    // Move plane forward at constant speed
+    plane.translateZ(-forwardSpeed);
+
+    // Steering
+    if (keys.ArrowLeft) plane.rotation.y += 0.02;
+    if (keys.ArrowRight) plane.rotation.y -= 0.02;
+
+    // Don’t let plane fall through the ground
+    if (plane.position.y < 1) {
+      plane.position.y = 1;
+      verticalVelocity = 0;
+    }
+  };
 }
