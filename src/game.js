@@ -168,7 +168,7 @@ export class Game {
         window.addEventListener("keyup", (e) => {
             if (e.code in this.keys) {
                 this.keys[e.code] = false;
-                this.fuel=this.fuel - 2;
+                this.fuel=this.fuel - 1;
             }
         });
     }

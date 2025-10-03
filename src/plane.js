@@ -15,7 +15,7 @@ export function createPlane() {
       model.position.set(0, 0, 0);
       group.add(model);
     },
-    (xhr) => console.log(`Plane loading: ${(xhr.loaded / xhr.total * 100).toFixed(2)}%`),
+   
     (error) => console.error("Error loading GLB:", error)
   );
 
