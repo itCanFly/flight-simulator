@@ -80,7 +80,7 @@ function updateStats(speed = 0, fuel = 100, time = '0:00') {
     document.getElementById('speedValue').textContent = `${speed} km/h`;
     document.getElementById('fuelValue').textContent = `${fuel}%`;
     document.getElementById('fuelBar').style.width = `${fuel}%`;
-    document.getElementById('timeValue').textContent = time;
+    //document.getElementById('timeValue').textContent = time;
 }
 
 // Example: Simulate stats updates every second

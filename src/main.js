@@ -1,47 +1,31 @@
-// main.js
 import * as THREE from "three";
-import { createPlane } from "./plane/plane.js";
-import { setupControls } from "./plane/controls.js";
+import { createScene } from "../src/scene/scene.js";
 import { Game } from "./game.js";
 
-export const game = new Game();  // create shared game object
+// Shared game object
+export const game = new Game();
 
-// Get the scene container inside gameScreen
+// Get the container for the Three.js canvas
 const sceneContainer = document.getElementById("sceneContainer");
 
-// Scene
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-  75,
-  sceneContainer.clientWidth / sceneContainer.clientHeight,
-  0.1,
-  1000
-);
+// Create the scene using our helper
+const { scene, camera, plane, updateWorld } = createScene();
+
+// Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(sceneContainer.clientWidth, sceneContainer.clientHeight);
 sceneContainer.appendChild(renderer.domElement);
 
-// Plane
-const plane = createPlane();
-scene.add(plane);
-setupControls(plane);
-
-// Camera setup
-camera.position.set(0, 2, 5);
-camera.lookAt(plane.position);
-
-// Animate
+// Animate loop
 function animate() {
   requestAnimationFrame(animate);
 
   if (game.state === "PLAYING") {
-    // plane moves only when game is active
-    plane.position.z -= 0.1;
+    // Update the world (controls, grid, camera)
+    updateWorld();
 
-    camera.position.x = plane.position.x - 5 * Math.sin(plane.rotation.y);
-    camera.position.z = plane.position.z - 5 * Math.cos(plane.rotation.y);
-    camera.position.y = plane.position.y + 2;
-    camera.lookAt(plane.position);
+    // Optional: move plane forward constantly
+    plane.position.z -= 0.1;
   }
 
   renderer.render(scene, camera);
@@ -57,7 +41,7 @@ game.onChange(g => {
   }
 });
 
-// Handle resize
+// Handle window resize
 window.addEventListener("resize", () => {
   camera.aspect = sceneContainer.clientWidth / sceneContainer.clientHeight;
   camera.updateProjectionMatrix();

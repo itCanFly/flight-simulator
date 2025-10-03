@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { createPlane } from "./plane/plane.js";
-import { setupControls } from "./plane/controls.js";
+import { createPlane } from "../plane/plane.js";
+import { setupControls } from "../plane/controls.js";
 
 export function createScene() {
   const scene = new THREE.Scene();
