@@ -14,7 +14,7 @@ const gridHelper = new THREE.GridHelper(1000, 500); // large grid
 scene.add(gridHelper);
 
 // Colors for grid transitions
-const groundColor = new THREE.Color(0xff0000); // red
+const groundColor = new THREE.Color(0xff00); // red
 const airColor = new THREE.Color(0xffffff);   // white
 
 // Camera
@@ -44,7 +44,7 @@ camera.lookAt(plane.position);
 let isAnimating = false;
 
 function animate() {
-  if (!isAnimating) return; // stop if game is not running
+  if (!isAnimating) return; 
   requestAnimationFrame(animate);
 
   // Update plane physics/controls

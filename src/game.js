@@ -1,6 +1,6 @@
 // game.js
 import * as THREE from 'three';       // ✅ make sure THREE is imported here
-import { createPlane } from './plane/plane.js';
+import { createPlane } from './plane.js';
 
 export class Game {
     constructor(containerId) {
@@ -16,7 +16,7 @@ export class Game {
         this.verticalVelocity = 0;
         this.gravity = -0.0005;
         this.liftStrength = 0.002;
-        this.forwardSpeed = 0.2;
+        this.forwardSpeed = 0.5;
 
         // Control keys
         this.keys = {
@@ -143,7 +143,7 @@ export class Game {
         this.verticalVelocity += this.gravity;
 
         this.plane.position.y += this.verticalVelocity;
-        this.plane.translateZ(-this.forwardSpeed);
+        this.plane.translateZ(this.forwardSpeed);
 
         if (this.keys.ArrowLeft) this.plane.rotation.y += 0.009;
         if (this.keys.ArrowRight) this.plane.rotation.y -= 0.009;
@@ -166,9 +166,9 @@ export class Game {
         const targetColor = (this.plane.position.y <= 1.01) ? this.groundColor : this.airColor;
         this.gridHelper.material.color.lerp(targetColor, 0.05);
 
-        this.camera.position.x = this.plane.position.x + 5 * Math.sin(this.plane.rotation.y);
-        this.camera.position.z = this.plane.position.z + 5 * Math.cos(this.plane.rotation.y);
-        this.camera.position.y = this.plane.position.y + 2;
+        this.camera.position.x = this.plane.position.x - 5 * Math.sin(this.plane.rotation.y);
+        this.camera.position.z = this.plane.position.z - 5 * Math.cos(this.plane.rotation.y);
+        this.camera.position.y = this.plane.position.y + 6;
         this.camera.lookAt(this.plane.position);
 
         this.renderer.render(this.scene, this.camera);
