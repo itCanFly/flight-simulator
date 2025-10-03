@@ -33,8 +33,8 @@ export function setupControls(plane) {
     plane.translateZ(-forwardSpeed);
 
     // Steering
-    if (keys.ArrowLeft) plane.rotation.y += 0.02;
-    if (keys.ArrowRight) plane.rotation.y -= 0.02;
+    if (keys.ArrowLeft) plane.rotation.y += 0.002;
+    if (keys.ArrowRight) plane.rotation.y -= 0.002;
 
     // Don’t let plane fall through the ground
     if (plane.position.y < 1) {

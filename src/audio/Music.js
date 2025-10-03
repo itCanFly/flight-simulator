@@ -38,11 +38,15 @@ this.gameOverAudio.preload = 'auto';
 
     playPlaying() {
         this.stopAll();
-        this.playingAudio.play();
+        this.playingAudio.play().catch(err => {
+                console.warn("Menu audio playback failed:", err);
+            });
     }
 
     playGameOver() {
         this.stopAll();
-        this.gameOverAudio.play();
+        this.gameOverAudio.play().catch(err => {
+                console.warn("Menu audio playback failed:", err);
+            });
     }
 }

@@ -1,3 +1,4 @@
+//uiManager.js
 import * as THREE from 'three';
 import { createPlane } from '../plane/plane.js';
 import { setupControls } from '../plane/controls.js';
@@ -9,7 +10,7 @@ const scene = new THREE.Scene();
 const axesHelper = new THREE.AxesHelper(6);   // X=red, Y=green, Z=blue
 //scene.add(axesHelper);
 
-const gridHelper = new THREE.GridHelper(500, 500); // large grid
+const gridHelper = new THREE.GridHelper(1000, 500); // large grid
 scene.add(gridHelper);
 
 // Colors for grid transitions

@@ -1,12 +1,9 @@
-// Imports
-import { startGame } from './ui/uiManager.js';
-import { Game } from "./game.js";
-import { Music } from "./audio/Music.js";
 
-// Create instances
-const myGame = new Game();
-const myMusic = new Music();
-console.log("Game state:", myGame.state);
+import {Game} from './game.js'
+// -----------------
+// UI & Game Logic
+// -----------------
+const myGame = new Game("gameScreen");
 
 // Screen elements
 const loadingScreen = document.getElementById('loadingScreen');
@@ -15,9 +12,7 @@ const levelSelection = document.getElementById('levelSelection');
 const gameScreen = document.getElementById('gameScreen');
 const progressFill = document.querySelector('.progress-fill');
 
-// -----------------
 // Loading Simulation
-// -----------------
 let progress = 0;
 const loadInterval = setInterval(() => {
     progress += 2;
@@ -29,117 +24,83 @@ const loadInterval = setInterval(() => {
             mainMenu.style.display = 'flex';
         }, 500);
     }
-}, 30);
+}, 95);
 
-// -----------------
-// Handle Music Autoplay Restriction
-// -----------------
-document.body.addEventListener('click', () => {
-    myMusic.playMenu();
-}, { once: true });
-
-// -----------------
 // Navigation Buttons
-// -----------------
-document.getElementById('playButton').addEventListener('click', () => {
+const playButton = document.getElementById('playButton');
+const backToMenu = document.getElementById('backToMenuButton');
+const backToLevel = document.getElementById('backToLevelsButton');
+
+playButton.addEventListener('click', () => {
     mainMenu.style.display = 'none';
     levelSelection.style.display = 'flex';
 });
 
-document.getElementById('backToMenuButton').addEventListener('click', () => {
+backToMenu.addEventListener('click', () => {
     levelSelection.style.display = 'none';
     mainMenu.style.display = 'flex';
-    myMusic.playMenu(); // switch back to menu music
 });
 
-document.getElementById('backToLevelsButton').addEventListener('click', () => {
+backToLevel.addEventListener('click', () => {
     gameScreen.style.display = 'none';
     levelSelection.style.display = 'flex';
-    myMusic.playMenu(); // go back to menu music or level selection music
 });
 
-// -----------------
 // Level Selection
-// -----------------
-document.querySelectorAll('.level-card').forEach(card => {
+const selectLevel = document.querySelectorAll('.level-card')
+selectLevel.forEach(card => {
     card.addEventListener('click', () => {
-        // Start game logic
-        myGame.start(); 
-        myMusic.playPlaying();
-        console.log("Game state:", myGame.state);
-
+        myGame.start();
         const level = card.dataset.level;
         document.getElementById('levelInfo').textContent = `Level: ${level}`;
         levelSelection.style.display = 'none';
         gameScreen.style.display = 'block';
-        
-        // Start animation (from ui.js)
-        startGame();
-
-        // Start stats simulation
         startStatsSimulation();
     });
 });
 
-// -----------------
-// Update Game Stats Dynamically
-// -----------------
-function updateStats(speed = 0, fuel = 100, time = '0:00') {
+// Stats simulation
+let speed = 10;
+let fuel = 100;
+let mySeconds = 0;
+let statsInterval = null;
+
+function updateStats(speed = 0, fuel = 100) {
     document.getElementById('speedValue').textContent = `${speed} km/h`;
     document.getElementById('fuelValue').textContent = `${fuel}%`;
     document.getElementById('fuelBar').style.width = `${fuel}%`;
-    document.getElementById('timeValue').textContent = time;
 }
-
-// Example: Simulate stats updates every second
-let exampleSpeed = 0;
-let exampleFuel = 100;
-let exampleSeconds = 0;
-let statsInterval = null;
 
 function startStatsSimulation() {
     if (statsInterval) clearInterval(statsInterval);
     statsInterval = setInterval(() => {
-        if (exampleFuel <= 0) {
+        if (fuel <= 0) {
             clearInterval(statsInterval);
             myGame.gameOver();
-            myMusic.playGameOver();
-            console.log("Game Over! State:", myGame.state);
-            showGameOverPopup();  
+            showGameOverPopup();
             return;
         }
-        exampleSpeed = Math.min(exampleSpeed + 10, 500); 
-        exampleFuel = Math.max(exampleFuel - 2, 0); 
-        exampleSeconds++;
-        const minutes = Math.floor(exampleSeconds / 60);
-        const seconds = exampleSeconds % 60;
-        updateStats(exampleSpeed, exampleFuel, `${minutes}:${seconds.toString().padStart(2, '0')}`);
-    }, 100);
+        speed = Math.min(speed, 500);
+        fuel = Math.max(fuel - 6, 0);
+        mySeconds++;
+        const minutes = Math.floor(mySeconds / 60);
+        const seconds = mySeconds % 60;
+        updateStats(speed, fuel, `${minutes}:${seconds.toString().padStart(2, '0')}`);
+    }, 1000);
 }
 
-// -----------------
-// Pause/Resume Toggle
-// -----------------
+// Pause/Resume
 document.body.addEventListener('keydown', (e) => {
-    if(e.key === "p"){  // toggle with "p"
+    if(e.key === "p"){
         if(myGame.state === 'PLAYING' || myGame.state === 'PAUSED'){
             myGame.changeState();
-            console.log("Game state changed to:", myGame.state);
-
-            if(myGame.state === 'PAUSED'){
-                clearInterval(statsInterval); 
-                myMusic.pause(); 
-            } else if(myGame.state === 'PLAYING'){
-                startStatsSimulation(); 
-                myMusic.playPlaying();  
-            }
+            if(myGame.state === 'PAUSED') clearInterval(statsInterval);
+            else if(myGame.state === 'PLAYING') startStatsSimulation();
         }
     }
 });
 
-// -----------------
 // Game Over Popup
-// -----------------
 const gameOverPopup = document.getElementById('gameOverPopup');
 const finalScore = document.getElementById('finalScore');
 const quitButton = document.getElementById('quitButton');
@@ -151,22 +112,18 @@ function showGameOverPopup() {
     gameOverPopup.style.display = 'flex';
 }
 
-// Handle popup buttons
 quitButton.addEventListener('click', () => {
     gameOverPopup.style.display = 'none';
     gameScreen.style.display = 'none';
+    myGame.gameOver();
     mainMenu.style.display = 'flex';
-    exampleFuel=100;
-    exampleSpeed=0;
-    myMusic.playMenu();
+    fuel=100; speed=0;
 });
 
 restartButton.addEventListener('click', () => {
     gameOverPopup.style.display = 'none';
-    exampleFuel=100;
-    exampleSpeed=0;
+    fuel=100; speed=0;
     myGame.start();
-    myMusic.playPlaying();
     startStatsSimulation();
 });
 
@@ -174,9 +131,7 @@ nextLevelButton.addEventListener('click', () => {
     gameOverPopup.style.display = 'none';
     myGame.level++;
     document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
-    exampleSpeed = 0;
-    exampleFuel = 100;
+    speed=0; fuel=100;
     myGame.start();
-    myMusic.playPlaying();
     startStatsSimulation();
 });
