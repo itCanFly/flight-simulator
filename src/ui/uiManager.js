@@ -1,6 +1,6 @@
 // test.js
-import { Game } from "./game.js";
-import { Music } from "./audio/Music.js";
+import { Game } from "../game.js";
+import { Music } from "../audio/Music.js";
 
 // Create instances
 const myGame = new Game();
@@ -97,7 +97,7 @@ function startStatsSimulation() {
         myGame.gameOver();
         myMusic.playGameOver();
         console.log("Game Over! State:", myGame.state);
-        showGameOverPopup();  // 👈 Add this line
+        showGameOverPopup();
         return;
     }
         exampleSpeed = Math.min(exampleSpeed + 10, 500); // increase speed
