@@ -12,6 +12,12 @@ export class Game {
         this.score = 0;
         this.listeners = [];
 
+        // Stats
+        this.speed = 0;
+        this.fuel = 100;
+        this.timeElapsed = 0;
+        this.statsInterval = null;
+
         // Movement variables
         this.verticalVelocity = 0;
         this.gravity = -0.0005;
@@ -66,7 +72,37 @@ export class Game {
         // Animation
         this.isAnimating = false;
     }
+    // Stats Handling
+    // -----------------
+    startStats() {
+        this.stopStats();
+        this.statsInterval = setInterval(() => {
+            if (this.fuel <= 0) {
+                this.stopStats();
+                this.gameOver();
+                return;
+            }
+            this.speed = Math.min(this.speed, 500);
+            this.fuel = Math.max(this.fuel, 0);
+            this.timeElapsed++;
+            this.notify();  // Let UI know stats changed
+        }, 1000);
+    }
 
+    stopStats() {
+        if (this.statsInterval) clearInterval(this.statsInterval);
+        this.statsInterval = null;
+    }
+    resetStats() {
+        this.speed = 0;
+        this.fuel = 100;
+        this.timeElapsed = 0;
+    }
+    getFormattedTime() {
+        const minutes = Math.floor(this.timeElapsed / 60);
+        const seconds = this.timeElapsed % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
     // -----------------
     // Listener System
     // -----------------
@@ -85,11 +121,12 @@ export class Game {
         this.state = 'PLAYING';
         this.score = 0;
         this.verticalVelocity = 0;
-
-        this.resetPosition(); 
+        this.resetPosition();
+        this.resetStats();
 
         this.isAnimating = true;
         this.animate();
+        this.startStats();
         this.notify();
     }
 
@@ -97,10 +134,12 @@ export class Game {
         if (this.state === 'PLAYING') {
             this.state = 'PAUSED';
             this.isAnimating = false;
+            this.stopStats();
         } else if (this.state === 'PAUSED') {
             this.state = 'PLAYING';
             this.isAnimating = true;
             this.animate();
+            this.startStats();
         }
         this.notify();
     }
@@ -108,19 +147,14 @@ export class Game {
     gameOver() {
         this.state = 'GAME_OVER';
         this.isAnimating = false;
-
-        this.resetPosition();  
+        this.stopStats();
+        this.resetPosition();
         this.notify();
     }
     resetPosition() {
-        // Reset plane to initial spot
-        this.plane.position.set(0, 5, 0);   // (x,y,z) adjust as needed
+        this.plane.position.set(0, 5, 0);
         this.plane.rotation.set(0, 0, 0);
-
-        // Reset velocity
         this.verticalVelocity = 0;
-
-        // Reset camera to behind the plane
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
     }
@@ -132,7 +166,10 @@ export class Game {
             if (e.code in this.keys) this.keys[e.code] = true;
         });
         window.addEventListener("keyup", (e) => {
-            if (e.code in this.keys) this.keys[e.code] = false;
+            if (e.code in this.keys) {
+                this.keys[e.code] = false;
+                this.fuel=this.fuel - 2;
+            }
         });
     }
 

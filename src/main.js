@@ -1,4 +1,3 @@
-
 import {Game} from './game.js'
 // -----------------
 // UI & Game Logic
@@ -55,52 +54,36 @@ selectLevel.forEach(card => {
         document.getElementById('levelInfo').textContent = `Level: ${level}`;
         levelSelection.style.display = 'none';
         gameScreen.style.display = 'block';
-        startStatsSimulation();
     });
 });
 
-// Stats simulation
-let speed = 10;
-let fuel = 100;
-let mySeconds = 0;
-let statsInterval = null;
-
-function updateStats(speed = 0, fuel = 100) {
-    document.getElementById('speedValue').textContent = `${speed} km/h`;
-    document.getElementById('fuelValue').textContent = `${fuel}%`;
-    document.getElementById('fuelBar').style.width = `${fuel}%`;
+// -----------------
+// Stats Display
+// -----------------
+function updateStats(game) {
+    document.getElementById('speedValue').textContent = `${game.speed} km/h`;
+    document.getElementById('fuelValue').textContent = `${game.fuel}%`;
+    document.getElementById('fuelBar').style.width = `${game.fuel}%`;
+    // document.getElementById('timeValue').textContent = game.getFormattedTime();
 }
 
-function startStatsSimulation() {
-    if (statsInterval) clearInterval(statsInterval);
-    statsInterval = setInterval(() => {
-        if (fuel <= 0) {
-            clearInterval(statsInterval);
-            myGame.gameOver();
-            showGameOverPopup();
-            return;
-        }
-        speed = Math.min(speed, 500);
-        fuel = Math.max(fuel - 6, 0);
-        mySeconds++;
-        const minutes = Math.floor(mySeconds / 60);
-        const seconds = mySeconds % 60;
-        updateStats(speed, fuel, `${minutes}:${seconds.toString().padStart(2, '0')}`);
-    }, 1000);
-}
+// Subscribe to game state updates
+myGame.onChange((game) => updateStats(game));
 
+// -----------------
 // Pause/Resume
+// -----------------
 document.body.addEventListener('keydown', (e) => {
-    if(e.key === "p"){
-        if(myGame.state === 'PLAYING' || myGame.state === 'PAUSED'){
+    if (e.key === "p") {
+        if (myGame.state === 'PLAYING' || myGame.state === 'PAUSED') {
             myGame.changeState();
-            if(myGame.state === 'PAUSED') clearInterval(statsInterval);
-            else if(myGame.state === 'PLAYING') startStatsSimulation();
         }
     }
 });
 
+// -----------------
 // Game Over Popup
+// -----------------
 const gameOverPopup = document.getElementById('gameOverPopup');
 const finalScore = document.getElementById('finalScore');
 const quitButton = document.getElementById('quitButton');
@@ -112,26 +95,28 @@ function showGameOverPopup() {
     gameOverPopup.style.display = 'flex';
 }
 
+// Hook into game over
+myGame.onChange((game) => {
+    if (game.state === 'GAME_OVER') {
+        showGameOverPopup();
+    }
+});
+
 quitButton.addEventListener('click', () => {
     gameOverPopup.style.display = 'none';
     gameScreen.style.display = 'none';
     myGame.gameOver();
     mainMenu.style.display = 'flex';
-    fuel=100; speed=0;
 });
 
 restartButton.addEventListener('click', () => {
     gameOverPopup.style.display = 'none';
-    fuel=100; speed=0;
     myGame.start();
-    startStatsSimulation();
 });
 
 nextLevelButton.addEventListener('click', () => {
     gameOverPopup.style.display = 'none';
     myGame.level++;
     document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
-    speed=0; fuel=100;
     myGame.start();
-    startStatsSimulation();
 });
