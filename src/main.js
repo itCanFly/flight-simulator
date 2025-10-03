@@ -109,7 +109,7 @@ function startStatsSimulation() {
             return;
         }
         exampleSpeed = Math.min(exampleSpeed + 10, 500); 
-        exampleFuel = Math.max(exampleFuel - 2, 0); 
+        exampleFuel = Math.max(exampleFuel - 0.01, 0); 
         exampleSeconds++;
         const minutes = Math.floor(exampleSeconds / 60);
         const seconds = exampleSeconds % 60;
