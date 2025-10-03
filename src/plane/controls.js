@@ -13,7 +13,7 @@ export function setupControls(plane) {
   });
 
   let verticalVelocity = 0;
-  const gravity = -0.0005;    // very gentle downward pull
+  const gravity = -0.001;    // very gentle downward pull
   const liftStrength = 0.002; // holding UP keeps you in the air
   const forwardSpeed = 0.05;   // constant forward movement
 
@@ -30,7 +30,7 @@ export function setupControls(plane) {
     plane.position.y += verticalVelocity;
 
     // Move plane forward at constant speed
-    plane.translateZ(-forwardSpeed);
+    plane.translateZ(forwardSpeed);
 
     // Steering
     if (keys.ArrowLeft) plane.rotation.y += 0.002;

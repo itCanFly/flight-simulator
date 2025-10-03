@@ -1,6 +1,6 @@
 //uiManager.js
 import * as THREE from 'three';
-import { createPlane } from '../plane/plane.js';
+import { createPlane } from '../plane.js';
 import { setupControls } from '../plane/controls.js';
 
 // Scene setup
@@ -55,9 +55,9 @@ function animate() {
   gridHelper.material.color.lerp(targetColor, 0.05);
 
   // Camera follow plane from behind
-  camera.position.x = plane.position.x + 5 * Math.sin(plane.rotation.y);
-  camera.position.z = plane.position.z + 5 * Math.cos(plane.rotation.y);
-  camera.position.y = plane.position.y + 2;
+  camera.position.x = plane.position.x - 5 * Math.sin(plane.rotation.y);
+  camera.position.z = plane.position.z - 5 * Math.cos(plane.rotation.y);
+  camera.position.y = plane.position.y + 6;
   camera.lookAt(plane.position);
 
   renderer.render(scene, camera);
