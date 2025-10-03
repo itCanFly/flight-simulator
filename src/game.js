@@ -1,5 +1,5 @@
 // game.js
-import * as THREE from 'three';       // ✅ make sure THREE is imported here
+import * as THREE from 'three';
 import { createPlane } from './plane.js';
 
 export class Game {
@@ -20,9 +20,9 @@ export class Game {
 
         // Movement variables
         this.verticalVelocity = 0;
-        this.gravity = -0.0005;
-        this.liftStrength = 0.002;
-        this.forwardSpeed = 0.5;
+        this.gravity = -0.005;
+        this.liftStrength = 0.007;
+        this.forwardSpeed = 0.35;
 
         // Control keys
         this.keys = {
