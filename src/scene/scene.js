@@ -11,7 +11,7 @@ export function createScene() {
 
   // ---------- Colored Grid ----------
   const gridSize = 500;
-  const gridDivisions = 10;
+  const gridDivisions = 50;
   const originalColors = []; // store original colors
   const gridGroup = new THREE.Group();
   const step = gridSize / gridDivisions;
@@ -21,7 +21,7 @@ export function createScene() {
     for (let j = 0; j < gridDivisions; j++) {
       const geometry = new THREE.PlaneGeometry(step, step);
       const isEven = (i + j) % 2 === 0;
-      const color = isEven ? 0xcccccc : 0x999999;
+      const color = isEven ? 0x000 : 0xffffffff;
       const material = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide });
       originalColors.push(new THREE.Color(color));
       const square = new THREE.Mesh(geometry, material);
@@ -47,7 +47,7 @@ export function createScene() {
     0.1,
     1000
   );
-  camera.position.set(0, 2, 5);
+  camera.position.set(0, 4, 5);
   camera.lookAt(plane.position);
 
   // ---------- Colors ----------

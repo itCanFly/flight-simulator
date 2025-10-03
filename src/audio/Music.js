@@ -4,7 +4,9 @@ export class Music {
         this.menuAudio = new Audio('./assets/audio/menu.mp3');
         this.playingAudio = new Audio('./assets/audio/playing.mp3');
         this.gameOverAudio = new Audio('./assets/audio/gameover.mp3');
-
+this.menuAudio.preload = 'auto';
+this.playingAudio.preload = 'auto';
+this.gameOverAudio.preload = 'auto';
         // loop background tracks if needed
         this.menuAudio.loop = true;
         this.playingAudio.loop = true;
@@ -27,10 +29,12 @@ export class Music {
         this.gameOverAudio.currentTime = 0;
     }
 
-    playMenu() {
-        this.stopAll();
-        this.menuAudio.play();
-    }
+        playMenu() {
+            this.stopAll();
+            this.menuAudio.play().catch(err => {
+                console.warn("Menu audio playback failed:", err);
+            });
+        }
 
     playPlaying() {
         this.stopAll();

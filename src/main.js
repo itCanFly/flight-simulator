@@ -1,49 +1,182 @@
-import * as THREE from "three";
-import { createScene } from "../src/scene/scene.js";
+// Imports
+import { startGame } from './ui/uiManager.js';
 import { Game } from "./game.js";
+import { Music } from "./audio/Music.js";
 
-// Shared game object
-export const game = new Game();
+// Create instances
+const myGame = new Game();
+const myMusic = new Music();
+console.log("Game state:", myGame.state);
 
-// Get the container for the Three.js canvas
-const sceneContainer = document.getElementById("sceneContainer");
+// Screen elements
+const loadingScreen = document.getElementById('loadingScreen');
+const mainMenu = document.getElementById('mainMenu');
+const levelSelection = document.getElementById('levelSelection');
+const gameScreen = document.getElementById('gameScreen');
+const progressFill = document.querySelector('.progress-fill');
 
-// Create the scene using our helper
-const { scene, camera, plane, updateWorld } = createScene();
+// -----------------
+// Loading Simulation
+// -----------------
+let progress = 0;
+const loadInterval = setInterval(() => {
+    progress += 2;
+    progressFill.style.width = progress + '%';
+    if (progress >= 100) {
+        clearInterval(loadInterval);
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            mainMenu.style.display = 'flex';
+        }, 500);
+    }
+}, 30);
 
-// Renderer
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(sceneContainer.clientWidth, sceneContainer.clientHeight);
-sceneContainer.appendChild(renderer.domElement);
+// -----------------
+// Handle Music Autoplay Restriction
+// -----------------
+document.body.addEventListener('click', () => {
+    myMusic.playMenu();
+}, { once: true });
 
-// Animate loop
-function animate() {
-  requestAnimationFrame(animate);
-
-  if (game.state === "PLAYING") {
-    // Update the world (controls, grid, camera)
-    updateWorld();
-
-    // Optional: move plane forward constantly
-    plane.position.z -= 0.1;
-  }
-
-  renderer.render(scene, camera);
-}
-animate();
-
-// React to game state changes
-game.onChange(g => {
-  console.log("3D World noticed game state:", g.state, "Level:", g.level);
-
-  if (g.state === "PLAYING") {
-    plane.position.set(0, 1, 0); // reset plane at start
-  }
+// -----------------
+// Navigation Buttons
+// -----------------
+document.getElementById('playButton').addEventListener('click', () => {
+    mainMenu.style.display = 'none';
+    levelSelection.style.display = 'flex';
 });
 
-// Handle window resize
-window.addEventListener("resize", () => {
-  camera.aspect = sceneContainer.clientWidth / sceneContainer.clientHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(sceneContainer.clientWidth, sceneContainer.clientHeight);
+document.getElementById('backToMenuButton').addEventListener('click', () => {
+    levelSelection.style.display = 'none';
+    mainMenu.style.display = 'flex';
+    myMusic.playMenu(); // switch back to menu music
+});
+
+document.getElementById('backToLevelsButton').addEventListener('click', () => {
+    gameScreen.style.display = 'none';
+    levelSelection.style.display = 'flex';
+    myMusic.playMenu(); // go back to menu music or level selection music
+});
+
+// -----------------
+// Level Selection
+// -----------------
+document.querySelectorAll('.level-card').forEach(card => {
+    card.addEventListener('click', () => {
+        // Start game logic
+        myGame.start(); 
+        myMusic.playPlaying();
+        console.log("Game state:", myGame.state);
+
+        const level = card.dataset.level;
+        document.getElementById('levelInfo').textContent = `Level: ${level}`;
+        levelSelection.style.display = 'none';
+        gameScreen.style.display = 'block';
+        
+        // Start animation (from ui.js)
+        startGame();
+
+        // Start stats simulation
+        startStatsSimulation();
+    });
+});
+
+// -----------------
+// Update Game Stats Dynamically
+// -----------------
+function updateStats(speed = 0, fuel = 100, time = '0:00') {
+    document.getElementById('speedValue').textContent = `${speed} km/h`;
+    document.getElementById('fuelValue').textContent = `${fuel}%`;
+    document.getElementById('fuelBar').style.width = `${fuel}%`;
+    document.getElementById('timeValue').textContent = time;
+}
+
+// Example: Simulate stats updates every second
+let exampleSpeed = 0;
+let exampleFuel = 100;
+let exampleSeconds = 0;
+let statsInterval = null;
+
+function startStatsSimulation() {
+    if (statsInterval) clearInterval(statsInterval);
+    statsInterval = setInterval(() => {
+        if (exampleFuel <= 0) {
+            clearInterval(statsInterval);
+            myGame.gameOver();
+            myMusic.playGameOver();
+            console.log("Game Over! State:", myGame.state);
+            showGameOverPopup();  
+            return;
+        }
+        exampleSpeed = Math.min(exampleSpeed + 10, 500); 
+        exampleFuel = Math.max(exampleFuel - 2, 0); 
+        exampleSeconds++;
+        const minutes = Math.floor(exampleSeconds / 60);
+        const seconds = exampleSeconds % 60;
+        updateStats(exampleSpeed, exampleFuel, `${minutes}:${seconds.toString().padStart(2, '0')}`);
+    }, 100);
+}
+
+// -----------------
+// Pause/Resume Toggle
+// -----------------
+document.body.addEventListener('keydown', (e) => {
+    if(e.key === "p"){  // toggle with "p"
+        if(myGame.state === 'PLAYING' || myGame.state === 'PAUSED'){
+            myGame.changeState();
+            console.log("Game state changed to:", myGame.state);
+
+            if(myGame.state === 'PAUSED'){
+                clearInterval(statsInterval); 
+                myMusic.pause(); 
+            } else if(myGame.state === 'PLAYING'){
+                startStatsSimulation(); 
+                myMusic.playPlaying();  
+            }
+        }
+    }
+});
+
+// -----------------
+// Game Over Popup
+// -----------------
+const gameOverPopup = document.getElementById('gameOverPopup');
+const finalScore = document.getElementById('finalScore');
+const quitButton = document.getElementById('quitButton');
+const restartButton = document.getElementById('restartButton');
+const nextLevelButton = document.getElementById('nextLevelButton');
+
+function showGameOverPopup() {
+    finalScore.textContent = `Score: ${myGame.score}`;
+    gameOverPopup.style.display = 'flex';
+}
+
+// Handle popup buttons
+quitButton.addEventListener('click', () => {
+    gameOverPopup.style.display = 'none';
+    gameScreen.style.display = 'none';
+    mainMenu.style.display = 'flex';
+    exampleFuel=100;
+    exampleSpeed=0;
+    myMusic.playMenu();
+});
+
+restartButton.addEventListener('click', () => {
+    gameOverPopup.style.display = 'none';
+    exampleFuel=100;
+    exampleSpeed=0;
+    myGame.start();
+    myMusic.playPlaying();
+    startStatsSimulation();
+});
+
+nextLevelButton.addEventListener('click', () => {
+    gameOverPopup.style.display = 'none';
+    myGame.level++;
+    document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
+    exampleSpeed = 0;
+    exampleFuel = 100;
+    myGame.start();
+    myMusic.playPlaying();
+    startStatsSimulation();
 });
