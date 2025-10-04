@@ -13,6 +13,13 @@ export function createPlane() {
       const model = gltf.scene;
       model.scale.set(1.5, 1.5, 1.5);
       model.position.set(0, 0, 0);
+      model.traverse((child) => {
+      if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+});
+
       group.add(model);
     },
    
