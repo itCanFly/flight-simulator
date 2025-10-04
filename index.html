@@ -58,10 +58,10 @@
                 <div class="fuel-bar-container">
                     <div class="fuel-bar-fill" id="fuelBar"></div>
                 </div>
-                <!-- <div class="stat-row" style="margin-top: 1rem;">
+                <div class="stat-row" style="margin-top: 1rem;">
                     <span class="stat-label">Time:</span>
                     <span class="stat-value" id="timeValue">0:00</span>
-                </div> -->
+                </div>
             </div>
         </div>
         <!-- Game Over Popup -->
@@ -76,6 +76,41 @@
                 </div>
             </div>
         </div>
+
+        <div id="exit" class="popup">
+            <div class="popup-content">
+                <h2>Exit Game</h2>
+                <div class="popup-buttons">
+                    <button id="quitButton">Quit</button>
+                    <button id="restartButton">Restart</button>
+                    <button id="resumeButton">Resume</button>
+                </div>
+            </div>
+        </div>
+        <!-- Win Popup -->
+<div id="winPopup" class="popup">
+  <div class="popup-content">
+    <h2>🎉 You Win!</h2>
+    <p id="winMessage">Congratulations! Level Complete!</p>
+    <div class="popup-buttons">
+      <button id="nextWinLevelButton">Next Level</button>
+      <button id="restartWinButton">Restart</button>
+      <button id="quitWinButton">Quit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lose Popup -->
+<div id="losePopup" class="popup">
+  <div class="popup-content">
+    <h2>💀 You Lose!</h2>
+    <p id="loseMessage">Try again to beat this level!</p>
+    <div class="popup-buttons">
+      <button id="restartLoseButton">Restart</button>
+      <button id="quitLoseButton">Quit</button>
+    </div>
+  </div>
+</div>
 </div>
     <script type="module" src="./src/main.js"></script>
     <!-- <script type="module" src="./src/test.js"></script> -->

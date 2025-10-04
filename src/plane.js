@@ -16,7 +16,7 @@ export function createPlane() {
       group.add(model);
     },
    
-    (error) => console.error("Error loading GLB:", error)
+    // (error) => console.error("Error loading GLB:", error)
   );
 
   // ---- Add Lights Here ----

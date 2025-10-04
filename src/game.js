@@ -12,17 +12,18 @@ export class Game {
         this.score = 0;
         this.listeners = [];
 
-        // Stats
-        this.speed = 0;
-        this.fuel = 100;
-        this.timeElapsed = 0;
-        this.statsInterval = null;
 
         // Movement variables
         this.verticalVelocity = 0;
         this.gravity = -0.005;
         this.liftStrength = 0.007;
-        this.forwardSpeed = 0.35;
+        this.forwardSpeed = 0.6;
+
+        // Stats
+        this.speed = this.forwardSpeed*10;
+        this.fuel = 100;
+        this.timeElapsed = 0;
+        this.statsInterval = null;
 
         // Control keys
         this.keys = {
@@ -36,18 +37,13 @@ export class Game {
         // -----------------
         this.scene = new THREE.Scene();
 
-        this.gridHelper = new THREE.GridHelper(2000, 500);
+        this.gridHelper = new THREE.GridHelper(3000, 500);
         this.scene.add(this.gridHelper);
 
         this.groundColor = new THREE.Color(0xff0000);
         this.airColor = new THREE.Color(0xffffff);
 
-        this.camera = new THREE.PerspectiveCamera(
-            100,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            100
-        );
+        this.camera = new THREE.PerspectiveCamera(100,window.innerWidth / window.innerHeight,0.1,3000);
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -101,7 +97,7 @@ export class Game {
     getFormattedTime() {
         const minutes = Math.floor(this.timeElapsed / 60);
         const seconds = this.timeElapsed % 60;
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        return `${minutes}::${seconds.toString().padStart(2, '0')}`;
     }
     // -----------------
     // Listener System
@@ -129,7 +125,37 @@ export class Game {
         this.startStats();
         this.notify();
     }
+    gameOver() {
+        this.state = 'GAME_OVER';
+        this.isAnimating = false;
+        this.stopStats();
+        this.resetPosition();
+        this.notify();
+    }
+win() {
+    this.state = 'WIN';
+    this.isAnimating = false;
+    this.stopStats();
+    this.resetPosition();
+    this.notify();
+}
 
+lose() {
+    this.state = 'LOSE';
+    this.isAnimating = false;
+    this.stopStats();
+    this.resetPosition();
+    this.notify();
+}
+    resume() {
+    if (this.state === 'PAUSED') {
+        this.state = 'PLAYING';
+        this.isAnimating = true;
+        this.animate();     
+        this.startStats();  
+        this.notify();      
+    }
+}
     changeState() {
         if (this.state === 'PLAYING') {
             this.state = 'PAUSED';
@@ -144,13 +170,7 @@ export class Game {
         this.notify();
     }
 
-    gameOver() {
-        this.state = 'GAME_OVER';
-        this.isAnimating = false;
-        this.stopStats();
-        this.resetPosition();
-        this.notify();
-    }
+
     resetPosition() {
         this.plane.position.set(0, 5, 0);
         this.plane.rotation.set(0, 0, 0);
@@ -181,9 +201,12 @@ export class Game {
 
         this.plane.position.y += this.verticalVelocity;
         this.plane.translateZ(this.forwardSpeed);
-
-        if (this.keys.ArrowLeft) this.plane.rotation.y += 0.009;
-        if (this.keys.ArrowRight) this.plane.rotation.y -= 0.009;
+        console.log(this.plane.position.z);
+        if(this.plane.position.z>=1500){
+            this.win();
+        }
+        if (this.keys.ArrowLeft) this.plane.rotation.y += 0.004;
+        if (this.keys.ArrowRight) this.plane.rotation.y -= 0.004;
 
         if (this.plane.position.y < 1) {
             this.plane.position.y = 1;
