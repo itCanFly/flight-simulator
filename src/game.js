@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { createPlane } from './plane.js';
 import { createClouds, updateClouds } from './clouds/clouds.js';
+// import { createStormEnvironment } from './storm/storm.js'; // Temporarily disabled storm system
 
 
 export class Game {
@@ -88,6 +89,12 @@ export class Game {
 
         // ☁️ Add volumetric-looking clouds with sunlight integration
         this.cloudGroup = createClouds(this.scene, this.sunLight);
+
+        // 🌩️ Storm environment (disabled)
+        // const fog = this.scene.fog; // existing fog
+        // const ambient = this.ambient;
+        // const storm = createStormEnvironment(this.scene, this.sunLight, ambient, fog);
+        // this.updateStorm = (delta) => storm.updateStorm(delta, this.plane, () => this.gameOver());
 
 
         // Camera initial pos
@@ -263,6 +270,8 @@ lose() {
 
         // Update moving clouds with fade animations
         updateClouds(this.cloudGroup, this.plane, this.camera, deltaTime);
+        // Update storm system (disabled)
+        // if (this.updateStorm) this.updateStorm(deltaTime);
 
 
         const targetColor = (this.plane.position.y <= 1.01) ? this.groundColor : this.airColor;
