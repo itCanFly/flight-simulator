@@ -1,6 +1,8 @@
 // game.js
 import * as THREE from 'three';
 import { createPlane } from './plane.js';
+import { createClouds, updateClouds } from './clouds/clouds.js';
+
 
 export class Game {
     constructor(containerId) {
@@ -32,10 +34,36 @@ export class Game {
             ArrowRight: false,
         };
 
+        // Clock for delta time
+        this.clock = new THREE.Clock();
+
         // -----------------
         // Scene Setup
         // -----------------
         this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.FogExp2(0x88ccee, 0.0012);
+
+        // 🌞 Directional sunlight setup
+        this.sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        this.sunLight.position.set(100, 200, 100);
+        this.sunLight.castShadow = true;
+
+        // Configure shadow quality
+        this.sunLight.shadow.mapSize.width = 2048;
+        this.sunLight.shadow.mapSize.height = 2048;
+        this.sunLight.shadow.camera.near = 0.5;
+        this.sunLight.shadow.camera.far = 500;
+        this.sunLight.shadow.camera.left = -200;
+        this.sunLight.shadow.camera.right = 200;
+        this.sunLight.shadow.camera.top = 200;
+        this.sunLight.shadow.camera.bottom = -200;
+
+        this.scene.add(this.sunLight);
+
+        // 🌤 Ambient light for soft fill
+        this.ambient = new THREE.AmbientLight(0xffffff, 0.4);
+        this.scene.add(this.ambient);
+
 
         this.gridHelper = new THREE.GridHelper(3000, 500);
         this.scene.add(this.gridHelper);
@@ -47,6 +75,9 @@ export class Game {
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor(0x88ccee);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // smoother shadows
         document.getElementById(containerId).appendChild(this.renderer.domElement);
 
         // -----------------
@@ -54,6 +85,10 @@ export class Game {
         // -----------------
         this.plane = createPlane();
         this.scene.add(this.plane);
+
+        // ☁️ Add volumetric-looking clouds with sunlight integration
+        this.cloudGroup = createClouds(this.scene, this.sunLight);
+
 
         // Camera initial pos
         this.camera.position.set(0, 8, 8);
@@ -221,7 +256,14 @@ lose() {
         if (!this.isAnimating) return;
         requestAnimationFrame(() => this.animate());
 
+        // Get delta time for smooth animations
+        const deltaTime = this.clock.getDelta();
+
         this._updateControls();
+
+        // Update moving clouds with fade animations
+        updateClouds(this.cloudGroup, this.plane, this.camera, deltaTime);
+
 
         const targetColor = (this.plane.position.y <= 1.01) ? this.groundColor : this.airColor;
         this.gridHelper.material.color.lerp(targetColor, 0.05);

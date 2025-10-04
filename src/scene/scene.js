@@ -1,13 +1,27 @@
+//scene.js
+
 import * as THREE from "three";
 import { createPlane } from "../plane/plane.js";
 import { setupControls } from "../plane/controls.js";
+import { createClouds, updateClouds } from "../clouds/clouds.js";
+
 
 export function createScene() {
   const scene = new THREE.Scene();
-
+  
   // ---------- Axes helper ----------
   const axesHelper = new THREE.AxesHelper(5);
   scene.add(axesHelper);
+
+  // ---------- Lighting ----------
+  // Add directional light for cloud system
+  const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+  sunLight.position.set(1, 1, 1);
+  scene.add(sunLight);
+
+  // Ambient light
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+  scene.add(ambientLight);
 
   // ---------- Colored Grid ----------
   const gridSize = 500;
@@ -37,6 +51,10 @@ export function createScene() {
   const plane = createPlane();
   scene.add(plane);
 
+  // ---------- Clouds ----------
+  const cloudGroup = createClouds(scene, sunLight);
+
+
   // ---------- Controls ----------
   const updateControls = setupControls(plane);
 
@@ -53,10 +71,19 @@ export function createScene() {
   // ---------- Colors ----------
   const groundColor = new THREE.Color(0xff0000);
 
+  // ---------- Clock for delta time ----------
+  const clock = new THREE.Clock();
+
   // Update world per frame
   function updateWorld() {
+    const deltaTime = clock.getDelta();
+    
     // Controls update
     updateControls();
+
+    // Clouds movement update with delta time
+    updateClouds(cloudGroup, plane, camera, deltaTime);
+
 
     // Grid coloring
     gridGroup.children.forEach((square, idx) => {
