@@ -21,7 +21,7 @@ export class Game {
         this.verticalVelocity = 0;
         this.gravity = -0.005;
         this.liftStrength = 0.007;
-        this.forwardSpeed = 1.9;
+        this.forwardSpeed = 0.9;
 
         // Stats
         this.stats={
