@@ -21,7 +21,7 @@ export class Game {
         this.verticalVelocity = 0;
         this.gravity = -0.005;
         this.liftStrength = 0.007;
-        this.forwardSpeed = 0.9;
+        this.forwardSpeed = 2.9;
 
         // Stats
         this.stats={
@@ -196,7 +196,7 @@ export class Game {
     }
 
     resetPosition() {
-        this.plane.position.set(0, 5, 0);
+        this.plane.position.set(1800, 1, -910);
         this.plane.rotation.set(0, 0, 0);
         this.verticalVelocity = 0;
         this.camera.position.set(0, 8, 8);
@@ -223,10 +223,14 @@ export class Game {
 
         this.plane.position.y += this.verticalVelocity;
         this.plane.translateZ(this.forwardSpeed);
-  
-        if(this.plane.position.z>=1500){
-            this.win();
-        }
+
+        console.log("Position x = ",this.plane.position.x);
+        console.log("Position y = ",this.plane.position.y);
+        console.log("Position z = ",this.plane.position.z);
+
+        // if(this.plane.position.z>=1500){
+        //     this.win();
+        // }
         if (this.keys.ArrowLeft) this.plane.rotation.y += 0.004;
         if (this.keys.ArrowRight) this.plane.rotation.y -= 0.004;
 
