@@ -218,11 +218,18 @@ export class Game {
     _updateControls() {
         if (this.state !== 'PLAYING') return;
 
-        if (this.keys.ArrowUp) this.verticalVelocity += this.liftStrength;
+        if (this.keys.ArrowUp) {
+            this.verticalVelocity += this.liftStrength;
+            if(this.plane.rotation.x>-0.3){
+                this.plane.rotation.x -= 0.003;
+            }
+        }
         this.verticalVelocity += this.gravity;
+        //  
 
         this.plane.position.y += this.verticalVelocity;
         this.plane.translateZ(this.forwardSpeed);
+
 
         console.log("Position x = ",this.plane.position.x);
         console.log("Position y = ",this.plane.position.y);
@@ -234,10 +241,43 @@ export class Game {
         if (this.keys.ArrowLeft) this.plane.rotation.y += 0.004;
         if (this.keys.ArrowRight) this.plane.rotation.y -= 0.004;
 
+        
+        // if(this.plane.position.z>=1500){
+        //     this.win();
+        // }
+        if (this.keys.ArrowLeft) {
+            this.plane.rotation.y += 0.009;
+            if(this.plane.rotation.z>-0.12){
+                this.plane.rotation.z -= 0.003;
+            }
+        }
+        if (this.keys.ArrowRight) {
+            this.plane.rotation.y -= 0.009;
+            if(this.plane.rotation.z<0.12){
+                this.plane.rotation.z += 0.003;
+            }
+        }
+
+
         if (this.plane.position.y < 1) {
             this.plane.position.y = 1;
             this.verticalVelocity = 0;
         }
+        if (this.plane.rotation.z<0){
+            this.plane.rotation.z+=0.0015;
+        }
+        else if (this.plane.rotation.z>0){
+            this.plane.rotation.z-=0.0015;
+        }
+        if(this.plane.rotation.x<0){
+            this.plane.rotation.x+=0.0015;
+        }
+        else if(this.plane.rotation.x>0){
+            this.plane.rotation.x-=0.0015;
+        }
+
+        console.log("this.plane.rotation.x:",this.plane.rotation.x);
+
     }
     // Animation Loop
     animate() {
