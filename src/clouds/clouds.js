@@ -2,31 +2,40 @@
 import * as THREE from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-/**
- * Enhanced Volumetric Cloud System with Advanced Lighting
- * Features:
- * - More 3D appearance using multiple layered spheres
- * - Infinite spawning ahead of camera
- * - Smooth fade in/out opacity animation
- * - Better distribution and variety
- * - Advanced lighting with sunlight interaction
- * - Realistic cloud coloring based on sun position
- */
-
 // Path to the new GLB cloud asset (user mentioned new cloud.glb; actual file present is clouds.glb)
 // If you rename the asset to cloud.glb just update this constant.
 const CLOUD_GLB_PATH = 'assets/models/clouds.glb';
+// Debug toggle for verbose cloud system logging
+const CLOUD_DEBUG = false;
+
+// Feature toggles
+const USE_INSTANCING_PLACEHOLDER = true;   // Use GPU instanced puff spheres before GLB loads
+const CLOUD_FOG_OVERLAY_ENABLED = true;    // Enable simple screen fog overlay when inside a cloud
+
+// Fog overlay configuration
+const FOG_OVERLAY_CONFIG = {
+  maxOpacity: 0.45,        // Peak opacity when deeply inside cloud
+  fadeSpeed: 2.5,          // Opacity lerp speed per second
+  radiusMultiplier: 0.9,   // How close to cloud center before max effect
+  color: 0xffffff,
+};
 
 // Cloud configuration
+// Altitude offset to raise entire cloud layer without hunting through code.
+// Increase this value to push clouds higher globally. Example: 0 -> original, 150 -> much higher sky layer.
+const CLOUD_ALTITUDE_OFFSET = 150; // << raised layer
+
 const CLOUD_CONFIG = {
   count: 200,                    // Total number of cloud clusters
   spawnDistance: 1000,          // How far ahead to spawn clouds
-  recycleDistance: 200,         // Distance behind camera to recycle
+  // recycleDistance removed (recycling now based purely on distance from plane)
   fadeInDuration: 2.0,          // Seconds to fade in
   fadeOutDuration: 1.5,         // Seconds to fade out
   fadeOutDistance: 150,         // Start fading when this close to recycling
-  minHeight: 15,
-  maxHeight: 90,
+  // Elevated base/min/max heights (original 15–90). We add CLOUD_ALTITUDE_OFFSET so
+  // gameplay plane (y≈1–10) flies well below cloud deck.
+  minHeight: 15 + CLOUD_ALTITUDE_OFFSET,
+  maxHeight: 90 + CLOUD_ALTITUDE_OFFSET,
   spreadX: 450,                 // Horizontal spread
   
   // Lighting properties
@@ -41,7 +50,6 @@ const CLOUD_CONFIG = {
   verticalDriftScale: 0.15,
   noiseScale: 0.0003,
   // LOD distances
-  lodNear: 0,           // full detail
   lodMid: 550,          // reduce lighting frequency
   lodFar: 850,          // stop lighting + lower opacity
   // Instanced far billboard layer
@@ -53,6 +61,10 @@ const CLOUD_CONFIG = {
  * for a more volumetric appearance with advanced lighting
  */
 function createCloudCluster(cloudTexture, directionalLight) {
+  if (USE_INSTANCING_PLACEHOLDER) {
+    return createInstancedPlaceholderCluster(cloudTexture, directionalLight);
+  }
+  // Fallback / alternative detailed (non-instanced) version kept for reference
   const cluster = new THREE.Group();
   
   // MORE spheres for fluffier, more 3D appearance
@@ -209,45 +221,80 @@ function createCloudCluster(cloudTexture, directionalLight) {
 }
 
 /**
+ * Creates a lightweight instanced placeholder cluster (single InstancedMesh) until GLB cloud model loads.
+ */
+function createInstancedPlaceholderCluster(cloudTexture, directionalLight) {
+  const cluster = new THREE.Group();
+  const puffCount = THREE.MathUtils.randInt(18, 32);
+  const baseScale = THREE.MathUtils.randFloat(1.8, 3.5);
+
+  const geometry = new THREE.SphereGeometry(18, 12, 10); // base shape; per-instance scaling will vary
+  const material = new THREE.MeshLambertMaterial({
+    map: cloudTexture,
+    transparent: true,
+    depthWrite: false,
+    opacity: 0,
+    side: THREE.DoubleSide,
+    color: CLOUD_CONFIG.baseCloudColor,
+    emissive: CLOUD_CONFIG.sunColor,
+    emissiveIntensity: CLOUD_CONFIG.emissiveIntensity,
+    fog: true,
+  });
+  const instanced = new THREE.InstancedMesh(geometry, material, puffCount);
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < puffCount; i++) {
+    const layer = i / puffCount;
+    const radiusScatter = THREE.MathUtils.randFloat(0.4, 1.0);
+    const radialDistance = THREE.MathUtils.randFloat(12, 42) * radiusScatter;
+    const angle = Math.random() * Math.PI * 2;
+    dummy.position.set(
+      Math.cos(angle) * radialDistance * 0.9 + THREE.MathUtils.randFloat(-6, 6),
+      THREE.MathUtils.randFloat(-18, 18),
+      Math.sin(angle) * radialDistance + THREE.MathUtils.randFloat(-6, 6)
+    );
+    dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+    const s = THREE.MathUtils.randFloat(0.5, 1.6) * (1.0 + layer * 0.4);
+    dummy.scale.setScalar(s);
+    dummy.updateMatrix();
+    instanced.setMatrixAt(i, dummy.matrix);
+  }
+  instanced.instanceMatrix.needsUpdate = true;
+  cluster.add(instanced);
+  cluster.userData = {
+    fadeProgress: 0,
+    targetOpacity: THREE.MathUtils.randFloat(0.75, 0.92),
+    isFadingOut: false,
+    fadeOutProgress: 0,
+    baseScale,
+    directionalLight,
+    driftSeed: Math.random()*1000,
+    driftSpeed: THREE.MathUtils.randFloat(CLOUD_CONFIG.driftSpeedMin, CLOUD_CONFIG.driftSpeedMax),
+    cachedMeshes: [instanced],
+    lastLightUpdateTime: 0,
+    boundingRadius: 55 * baseScale,
+    instancedPlaceholder: true,
+  };
+  return cluster;
+}
+
+/**
  * Positions a cloud cluster in front of the camera
  */
-function positionCloudAhead(cloud, camera, distance) {
-  // Get camera forward direction
-  const forward = new THREE.Vector3();
-  camera.getWorldDirection(forward);
-  
-  // Position ahead of camera
-  cloud.position.copy(camera.position);
-  cloud.position.addScaledVector(forward, -distance);
-  
-  // Add random offset
-  cloud.position.x += THREE.MathUtils.randFloatSpread(CLOUD_CONFIG.spreadX);
-  cloud.position.y = THREE.MathUtils.randFloat(
-    CLOUD_CONFIG.minHeight,
-    CLOUD_CONFIG.maxHeight
-  );
-  
-  // Random rotation
-  cloud.rotation.y = Math.random() * Math.PI * 2;
-  
-  // Reset scale
-  cloud.scale.setScalar(cloud.userData.baseScale);
-  
-  // Reset fade state
-  cloud.userData.fadeProgress = 0;
-  cloud.userData.isFadingOut = false;
-  cloud.userData.fadeOutProgress = 0;
-}
+// Removed unused function positionCloudAhead (was not referenced)
 
 /**
  * Updates the opacity of all meshes in a cloud cluster
  */
 function updateCloudOpacity(cloud, opacity) {
-  cloud.traverse((obj) => {
-    if (obj.isMesh && obj.material) {
-      obj.material.opacity = opacity;
-    }
-  });
+  // Use cached meshes if available for performance; else traverse once to build.
+  if (!cloud.userData.cachedMeshes) {
+    const collected = [];
+    cloud.traverse(o => { if (o.isMesh && o.material) collected.push(o); });
+    cloud.userData.cachedMeshes = collected;
+  }
+  for (const m of cloud.userData.cachedMeshes) {
+    m.material.opacity = opacity;
+  }
 }
 
 /**
@@ -292,6 +339,12 @@ function updateCloudLighting(cloud, directionalLight) {
  * @param {THREE.Scene} scene - The Three.js scene
  * @param {THREE.DirectionalLight} directionalLight - The main sun/directional light
  */
+/**
+ * Initialize the cloud system.
+ * @param {THREE.Scene} scene Scene to attach cloud group to.
+ * @param {THREE.DirectionalLight|null} directionalLight Optional existing sun light.
+ * @returns {THREE.Group} Group containing all clouds and far billboards.
+ */
 export function createClouds(scene, directionalLight = null) {
   const cloudGroup = new THREE.Group();
   const textureLoader = new THREE.TextureLoader();
@@ -327,10 +380,11 @@ export function createClouds(scene, directionalLight = null) {
       Math.sin(angle) * distance
     );
     cluster.rotation.y = Math.random() * Math.PI * 2;
-    cluster.scale.setScalar(cluster.userData.baseScale);
+    cluster.scale.setScalar(cluster.userData.baseScale || 1);
     cluster.userData.fadeProgress = 1.0;
     updateCloudOpacity(cluster, cluster.userData.targetOpacity);
     updateCloudLighting(cluster, directionalLight);
+    if (!cluster.userData.boundingRadius) cluster.userData.boundingRadius = 55 * (cluster.userData.baseScale || 1);
     cloudGroup.add(cluster);
   }
 
@@ -369,20 +423,25 @@ export function createClouds(scene, directionalLight = null) {
         // Cache meshes after replacement for performance
         cluster.userData.cachedMeshes = [];
         cluster.traverse(o => { if (o.isMesh && o.material) cluster.userData.cachedMeshes.push(o); });
+        // Recompute bounding radius based on new geometry
+        const bbox = new THREE.Box3().setFromObject(clone);
+        const sizeVec = new THREE.Vector3();
+        bbox.getSize(sizeVec);
+        cluster.userData.boundingRadius = sizeVec.length() * 0.33; // heuristic
+        cluster.userData.instancedPlaceholder = false;
         // Re-apply lighting now that meshes changed
         updateCloudLighting(cluster, directionalLight);
       });
-      console.log('☁️ Loaded GLB cloud model and applied to clusters');
+      if (CLOUD_DEBUG) console.log('☁️ Loaded GLB cloud model and applied to clusters');
     },
     undefined,
     (err) => {
-      console.warn('⚠️ Could not load GLB cloud model, keeping procedural clouds.', err);
+      if (CLOUD_DEBUG) console.warn('⚠️ Could not load GLB cloud model, keeping procedural clouds.', err);
     }
   );
 
   scene.add(cloudGroup);
 
-  // === FAR BILLBOARD INSTANCED LAYER ===
   // Simple very-far background layer using planes to reduce heavy geometry afar.
   const farGeometry = new THREE.PlaneGeometry(120, 60, 1, 1);
   const farMaterial = new THREE.MeshBasicMaterial({
@@ -401,6 +460,7 @@ export function createClouds(scene, directionalLight = null) {
     const radius = THREE.MathUtils.randFloat(CLOUD_CONFIG.spawnDistance * 0.9, CLOUD_CONFIG.spawnDistance * 1.2);
     dummy.position.set(
       Math.cos(angle) * radius,
+      // Elevated far billboard layer too (add offset implicitly via config values already adjusted)
       THREE.MathUtils.randFloat(CLOUD_CONFIG.minHeight + 10, CLOUD_CONFIG.maxHeight + 40),
       Math.sin(angle) * radius
     );
@@ -414,28 +474,56 @@ export function createClouds(scene, directionalLight = null) {
   instanced.renderOrder = -1;
   cloudGroup.add(instanced);
   
-  console.log(`☁️ Created ${CLOUD_CONFIG.count} volumetric cloud clusters with advanced lighting`);
+  if (CLOUD_DEBUG) console.log(`☁️ Created ${CLOUD_CONFIG.count} volumetric cloud clusters`);
   
   return cloudGroup;
 }
-
 /**
  * Updates clouds with smooth fade animations, infinite spawning, and dynamic lighting
  */
+/**
+ * Per-frame update for clouds: fade, drift, lighting LOD, recycling.
+ * @param {THREE.Group} cloudGroup Cloud system group.
+ * @param {THREE.Object3D} plane The player plane (position reference).
+ * @param {THREE.Camera} camera Active camera.
+ * @param {number} deltaTime Frame delta in seconds.
+ */
 export function updateClouds(cloudGroup, plane, camera, deltaTime) {
   if (!camera) {
-    console.warn("⚠️ Camera not provided to updateClouds");
+    if (CLOUD_DEBUG) console.warn("⚠️ Camera not provided to updateClouds");
     return;
   }
 
   const time = performance.now() * 0.001;
+
+  // Ensure fog overlay mesh exists if feature enabled
+  if (CLOUD_FOG_OVERLAY_ENABLED && !cloudGroup.userData.overlayMesh) {
+    const overlayGeo = new THREE.PlaneGeometry(1, 1, 1, 1);
+    const overlayMat = new THREE.MeshBasicMaterial({
+      color: FOG_OVERLAY_CONFIG.color,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+      fog: false,
+    });
+    const overlay = new THREE.Mesh(overlayGeo, overlayMat);
+    overlay.name = 'CloudFogOverlay';
+    overlay.renderOrder = 999;
+    camera.add(overlay);
+    overlay.position.set(0,0,-0.5); // in front of camera
+    cloudGroup.userData.overlayMesh = overlay;
+    cloudGroup.userData.overlayOpacity = 0;
+  }
+
+  let insideDepth = 0; // 0..1 how deep inside a cloud volume
 
   cloudGroup.children.forEach((cloud) => {
     if (cloud.isInstancedMesh) return; // skip instanced far layer here
     // Calculate distance from plane position (not just behind)
     const distanceFromPlane = cloud.position.distanceTo(plane.position);
     
-    // === FADE IN LOGIC ===
+    
     if (cloud.userData.fadeProgress < 1.0 && !cloud.userData.isFadingOut) {
       cloud.userData.fadeProgress += deltaTime / CLOUD_CONFIG.fadeInDuration;
       cloud.userData.fadeProgress = Math.min(cloud.userData.fadeProgress, 1.0);
@@ -446,7 +534,7 @@ export function updateClouds(cloudGroup, plane, camera, deltaTime) {
       updateCloudOpacity(cloud, currentOpacity);
     }
     
-    // === FADE OUT LOGIC ===
+   
     // Start fading out when far from plane
     if (distanceFromPlane > CLOUD_CONFIG.spawnDistance - CLOUD_CONFIG.fadeOutDistance && 
         !cloud.userData.isFadingOut) {
@@ -475,7 +563,6 @@ export function updateClouds(cloudGroup, plane, camera, deltaTime) {
     cloud.position.z += nz * CLOUD_CONFIG.noiseScale * 60;
     cloud.position.y += ny * CLOUD_CONFIG.noiseScale * 25 * CLOUD_CONFIG.verticalDriftScale;
 
-    // === LOD DECISIONS ===
     // Skip heavy lighting update if far away using tiers
     if (cloud.userData.directionalLight) {
       const dist = distanceFromPlane;
@@ -498,7 +585,6 @@ export function updateClouds(cloudGroup, plane, camera, deltaTime) {
       }
     }
     
-    // === RECYCLING LOGIC ===
     // Recycle clouds that are too far from the plane
     if (distanceFromPlane > CLOUD_CONFIG.spawnDistance) {
       // Respawn in a random direction around the plane
@@ -524,9 +610,35 @@ export function updateClouds(cloudGroup, plane, camera, deltaTime) {
         updateCloudLighting(cloud, cloud.userData.directionalLight);
       }
     }
-  });
-}
 
+    // Interior fog determination (approximate sphere volume)
+    if (CLOUD_FOG_OVERLAY_ENABLED && cloud.userData.boundingRadius) {
+      const radius = cloud.userData.boundingRadius;
+      const dist = distanceFromPlane;
+      const effectiveRadius = radius * FOG_OVERLAY_CONFIG.radiusMultiplier;
+      if (dist < effectiveRadius) {
+        const depth = 1 - dist / effectiveRadius; // 0 at edge, 1 at center
+        if (depth > insideDepth) insideDepth = depth;
+      }
+    }
+  });
+
+  // Update overlay opacity smoothly
+  if (CLOUD_FOG_OVERLAY_ENABLED && cloudGroup.userData.overlayMesh) {
+    const target = insideDepth * FOG_OVERLAY_CONFIG.maxOpacity;
+    cloudGroup.userData.overlayOpacity = THREE.MathUtils.lerp(
+      cloudGroup.userData.overlayOpacity,
+      target,
+      Math.min(1, FOG_OVERLAY_CONFIG.fadeSpeed * deltaTime)
+    );
+    cloudGroup.userData.overlayMesh.material.opacity = cloudGroup.userData.overlayOpacity;
+    // Scale overlay to cover viewport: set scale based on FOV
+    const dist = 0.5; // plane Z offset
+    const height = 2 * Math.tan((camera.fov * Math.PI/180)/2) * dist;
+    const width = height * camera.aspect;
+    cloudGroup.userData.overlayMesh.scale.set(width, height, 1);
+  }
+}
 /**
  * Cubic easing function for smooth animations
  */
