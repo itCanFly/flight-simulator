@@ -21,6 +21,7 @@ let turbulenceStart = 0;
 
 export function shakeCamera(camera, intensity) {
       const elapsed = performance.now() - turbulenceStart;
-    camera.rotation.x = Math.sin(elapsed * 0.01) * intensity;
-    camera.rotation.z = Math.sin(elapsed * 0.013) * intensity;
+
+    camera.position.z += Math.sin(elapsed * 0.0005) * intensity;
+    camera.position.x += Math.sin(elapsed * 0.013) * intensity;
 }

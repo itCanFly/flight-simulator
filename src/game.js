@@ -1,9 +1,9 @@
 // game.js
 import * as THREE from 'three';
 import { createPlane } from './plane.js';
+import { applyTurbulence,shakeCamera } from './physics.js';
 import { createClouds, updateClouds } from './clouds/clouds.js';
-// import { createStormEnvironment } from './storm/storm.js'; // Temporarily disabled storm system
-
+import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from './scene/stats.js';
 
 export class Game {
     constructor(containerId) {
@@ -15,17 +15,19 @@ export class Game {
         this.score = 0;
         this.listeners = [];
 
-
         // Movement variables
         this.verticalVelocity = 0;
         this.gravity = -0.005;
         this.liftStrength = 0.007;
-        this.forwardSpeed = 0.6;
+        this.forwardSpeed = 1.9;
 
         // Stats
-        this.speed = this.forwardSpeed*10;
-        this.fuel = 100;
-        this.timeElapsed = 0;
+        this.stats={
+            speed : 90,
+            fuel : 100,
+            timeElapsed : 0,
+        }
+
         this.statsInterval = null;
 
         // Control keys
@@ -61,10 +63,8 @@ export class Game {
 
         this.scene.add(this.sunLight);
 
-        // 🌤 Ambient light for soft fill
         this.ambient = new THREE.AmbientLight(0xffffff, 0.4);
         this.scene.add(this.ambient);
-
 
         this.gridHelper = new THREE.GridHelper(3000, 500);
         this.scene.add(this.gridHelper);
@@ -90,13 +90,6 @@ export class Game {
         // ☁️ Add volumetric-looking clouds with sunlight integration
         this.cloudGroup = createClouds(this.scene, this.sunLight);
 
-        // 🌩️ Storm environment (disabled)
-        // const fog = this.scene.fog; // existing fog
-        // const ambient = this.ambient;
-        // const storm = createStormEnvironment(this.scene, this.sunLight, ambient, fog);
-        // this.updateStorm = (delta) => storm.updateStorm(delta, this.plane, () => this.gameOver());
-
-
         // Camera initial pos
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
@@ -113,33 +106,19 @@ export class Game {
     // Stats Handling
     // -----------------
     startStats() {
-        this.stopStats();
-        this.statsInterval = setInterval(() => {
-            if (this.fuel <= 0) {
-                this.stopStats();
-                this.gameOver();
-                return;
-            }
-            this.speed = Math.min(this.speed, 500);
-            this.fuel = Math.max(this.fuel, 0);
-            this.timeElapsed++;
-            this.notify();  // Let UI know stats changed
-        }, 1000);
+        startStatsLoop(this.stats, this.statsInterval, () => this.notify(),() => this.gameOver() );
     }
 
     stopStats() {
-        if (this.statsInterval) clearInterval(this.statsInterval);
-        this.statsInterval = null;
+        stopStatsLoop(this.statsInterval);
     }
+
     resetStats() {
-        this.speed = 0;
-        this.fuel = 100;
-        this.timeElapsed = 0;
+        resetStatsLoop(this.stats,this.forwardSpeed);
     }
+
     getFormattedTime() {
-        const minutes = Math.floor(this.timeElapsed / 60);
-        const seconds = this.timeElapsed % 60;
-        return `${minutes}::${seconds.toString().padStart(2, '0')}`;
+        getFormatted(this.stats);
     }
     // -----------------
     // Listener System
@@ -174,30 +153,32 @@ export class Game {
         this.resetPosition();
         this.notify();
     }
-win() {
-    this.state = 'WIN';
-    this.isAnimating = false;
-    this.stopStats();
-    this.resetPosition();
-    this.notify();
-}
-
-lose() {
-    this.state = 'LOSE';
-    this.isAnimating = false;
-    this.stopStats();
-    this.resetPosition();
-    this.notify();
-}
-    resume() {
-    if (this.state === 'PAUSED') {
-        this.state = 'PLAYING';
-        this.isAnimating = true;
-        this.animate();     
-        this.startStats();  
-        this.notify();      
+    win() {
+        this.state = 'WIN';
+        this.isAnimating = false;
+        this.stopStats();
+        this.resetPosition();
+        this.notify();
     }
-}
+
+    lose() {
+        this.state = 'LOSE';
+        this.isAnimating = false;
+        this.stopStats();
+        this.resetPosition();
+        this.notify();
+    }
+
+    resume() {
+        if (this.state === 'PAUSED') {
+            this.state = 'PLAYING';
+            this.isAnimating = true;
+            this.animate();     
+            this.startStats();  
+            this.notify();      
+        }
+    }
+
     changeState() {
         if (this.state === 'PLAYING') {
             this.state = 'PAUSED';
@@ -230,7 +211,7 @@ lose() {
         window.addEventListener("keyup", (e) => {
             if (e.code in this.keys) {
                 this.keys[e.code] = false;
-                this.fuel=this.fuel - 1;
+                this.stats.fuel=this.stats.fuel -1;
             }
         });
     }
@@ -243,7 +224,7 @@ lose() {
 
         this.plane.position.y += this.verticalVelocity;
         this.plane.translateZ(this.forwardSpeed);
-        console.log(this.plane.position.z);
+  
         if(this.plane.position.z>=1500){
             this.win();
         }
@@ -280,8 +261,9 @@ lose() {
         this.camera.position.x = this.plane.position.x - 5 * Math.sin(this.plane.rotation.y);
         this.camera.position.z = this.plane.position.z - 5 * Math.cos(this.plane.rotation.y);
         this.camera.position.y = this.plane.position.y + 6;
+        
         this.camera.lookAt(this.plane.position);
-
+        // shakeCamera(this.camera,0.25);
         this.renderer.render(this.scene, this.camera);
     }
 

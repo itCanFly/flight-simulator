@@ -5,6 +5,7 @@ import { Game } from './game.js';
 // -----------------
 const myGame = new Game("gameScreen");
 
+
 // Screen elements
 const loadingScreen = document.getElementById('loadingScreen');
 const mainMenu = document.getElementById('mainMenu');
@@ -63,9 +64,11 @@ selectLevel.forEach(card => {
 // Stats Display
 // -----------------
 function updateStats(game) {
-    document.getElementById('speedValue').textContent = `${game.speed} km/h`;
-    document.getElementById('fuelValue').textContent = `${game.fuel}%`;
-    document.getElementById('fuelBar').style.width = `${game.fuel}%`;
+    const { speed, fuel } = game.stats;
+    
+    document.getElementById('speedValue').textContent = `${speed} km/h`;
+    document.getElementById('fuelValue').textContent = `${fuel}%`;
+    document.getElementById('fuelBar').style.width = `${fuel}%`;
 }
 
 myGame.onChange(game => updateStats(game));
@@ -100,6 +103,7 @@ const resumeButton = document.querySelector('#exit #resumeButton');
 // -----------------
 // Functions
 // -----------------
+
 function showGamePause() {
     myGame.state = 'PAUSED';
     exit.style.display = 'flex';
