@@ -1,7 +1,7 @@
 // game.js
 import * as THREE from 'three';
 import { createPlane } from './plane.js';
-import { createClouds, updateClouds } from './clouds/clouds.js';
+// import { createClouds, updateClouds } from './clouds/clouds.js';
 // import { createStormEnvironment } from './storm/storm.js'; // Temporarily disabled storm system
 
 
@@ -88,7 +88,7 @@ export class Game {
         this.scene.add(this.plane);
 
         // ☁️ Add volumetric-looking clouds with sunlight integration
-        this.cloudGroup = createClouds(this.scene, this.sunLight);
+        // this.cloudGroup = createClouds(this.scene, this.sunLight);
 
         // 🌩️ Storm environment (disabled)
         // const fog = this.scene.fog; // existing fog
@@ -238,22 +238,53 @@ lose() {
     _updateControls() {
         if (this.state !== 'PLAYING') return;
 
-        if (this.keys.ArrowUp) this.verticalVelocity += this.liftStrength;
+        if (this.keys.ArrowUp) {
+            this.verticalVelocity += this.liftStrength;
+            if(this.plane.rotation.x>-0.3){
+                this.plane.rotation.x -= 0.003;
+            }
+        }
         this.verticalVelocity += this.gravity;
+        //  
 
         this.plane.position.y += this.verticalVelocity;
         this.plane.translateZ(this.forwardSpeed);
-        console.log(this.plane.position.z);
+        
         if(this.plane.position.z>=1500){
             this.win();
         }
-        if (this.keys.ArrowLeft) this.plane.rotation.y += 0.004;
-        if (this.keys.ArrowRight) this.plane.rotation.y -= 0.004;
+        if (this.keys.ArrowLeft) {
+            this.plane.rotation.y += 0.009;
+            if(this.plane.rotation.z>-0.12){
+                this.plane.rotation.z -= 0.003;
+            }
+        }
+        if (this.keys.ArrowRight) {
+            this.plane.rotation.y -= 0.009;
+            if(this.plane.rotation.z<0.12){
+                this.plane.rotation.z += 0.003;
+            }
+        }
 
         if (this.plane.position.y < 1) {
             this.plane.position.y = 1;
             this.verticalVelocity = 0;
         }
+        if (this.plane.rotation.z<0){
+            this.plane.rotation.z+=0.0015;
+        }
+        else if (this.plane.rotation.z>0){
+            this.plane.rotation.z-=0.0015;
+        }
+        if(this.plane.rotation.x<0){
+            this.plane.rotation.x+=0.0015;
+        }
+        else if(this.plane.rotation.x>0){
+            this.plane.rotation.x-=0.0015;
+        }
+
+        console.log("this.plane.rotation.x:",this.plane.rotation.x);
+
     }
 
     // -----------------
@@ -269,7 +300,7 @@ lose() {
         this._updateControls();
 
         // Update moving clouds with fade animations
-        updateClouds(this.cloudGroup, this.plane, this.camera, deltaTime);
+        // updateClouds(this.cloudGroup, this.plane, this.camera, deltaTime);
         // Update storm system (disabled)
         // if (this.updateStorm) this.updateStorm(deltaTime);
 
