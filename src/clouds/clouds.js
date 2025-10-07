@@ -22,7 +22,7 @@ const FOG_OVERLAY_CONFIG = {
 // Cloud configuration
 // Altitude offset to raise entire cloud layer without hunting through code.
 // Increase this value to push clouds higher globally. Example: 0 -> original, 150 -> much higher sky layer.
-const CLOUD_ALTITUDE_OFFSET = 150; // << raised layer
+const CLOUD_ALTITUDE_OFFSET = 350; // << raised layer
 
 const CLOUD_CONFIG = {
   count: 300,                    // More clouds for better coverage
