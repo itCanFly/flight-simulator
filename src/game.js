@@ -204,9 +204,20 @@ export class Game {
     }
     // Controls Handling
     _setupControls() {
+        this.cameraMode = "thirdPerson";
+
         window.addEventListener("keydown", (e) => {
-            if (e.code in this.keys) this.keys[e.code] = true;
+            // Handle regular flight keys
+            if (e.code in this.keys) {
+                this.keys[e.code] = true;
+            }
+
+            // Toggle camera when Shift is pressed
+            if (e.code === "KeyC") {
+                this.toggleCameraMode();
+            }
         });
+
         window.addEventListener("keyup", (e) => {
             if (e.code in this.keys) {
                 this.keys[e.code] = false;
@@ -263,8 +274,12 @@ export class Game {
             this.plane.rotation.x-=0.0015;
         }
 
-        console.log("this.plane.rotation.x:",this.plane.rotation.x);
+        
 
+    }
+
+    toggleCameraMode() {
+        this.cameraMode = this.cameraMode === "thirdPerson" ? "topView" : "thirdPerson";
     }
     // Animation Loop
     animate() {
@@ -278,10 +293,19 @@ export class Game {
 
         // Update moving clouds with fade animations
         updateClouds(this.cloudGroup, this.plane, this.camera, deltaTime);
-        this.camera.position.x = this.plane.position.x - 5 * Math.sin(this.plane.rotation.y);
-        this.camera.position.z = this.plane.position.z - 5 * Math.cos(this.plane.rotation.y);
-        this.camera.position.y = this.plane.position.y + 6;
-        
+        if (this.cameraMode === "thirdPerson") {
+            this.camera.position.x = this.plane.position.x - 5 * Math.sin(this.plane.rotation.y);
+            this.camera.position.z = this.plane.position.z - 5 * Math.cos(this.plane.rotation.y);
+            this.camera.position.y = this.plane.position.y + 6;
+            
+        }
+        else if (this.cameraMode === "topView") {
+        // First-person (inside the plane)
+            this.camera.position.x = this.plane.position.x - 3 * Math.sin(this.plane.rotation.z) ;
+            this.camera.position.y = this.plane.position.y + 12.5; // height above
+            this.camera.position.z = this.plane.position.z - 3 * Math.cos(this.plane.rotation.z);
+            
+        }
         this.camera.lookAt(this.plane.position);
         // shakeCamera(this.camera,0.25);
         this.renderer.render(this.scene, this.camera);
