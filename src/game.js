@@ -5,7 +5,7 @@ import { applyTurbulence,shakeCamera } from './physics.js';
 import { createClouds, updateClouds } from './clouds/clouds.js';
 import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from './scene/stats.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { createCurvedArrow,createStraightArrow } from './arrow.js';
+
 
 export class Game {
     constructor(containerId) {
@@ -109,11 +109,8 @@ export class Game {
         this.plane = createPlane();
         this.scene.add(this.plane);
 
+    //  Add volumetric-looking clouds with sunlight integration
         this.cloudGroup = createClouds(this.scene, this.sunLight);
-
-        // Create rotating circle
-        this._createRotatingCircle();
-
         // Camera initial pos
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
@@ -129,6 +126,9 @@ export class Game {
 
         // Animation
         this.isAnimating = false;
+        
+        // Start with menu music
+        this.music.playMenu();
     }
 
     // Create rotating circle at waypoint position
@@ -250,6 +250,7 @@ export class Game {
         this.isAnimating = true;
         this.animate();
         this.startStats();
+
         this.notify();
     }
     gameOver() {
@@ -257,6 +258,8 @@ export class Game {
         this.isAnimating = false;
         this.stopStats();
         this.resetPosition();
+        this.music.stopMovementAudio();
+        this.music.playGameOver();
         this.notify();
     }
     win() {
@@ -266,6 +269,15 @@ export class Game {
         this.resetPosition();
         this.notify();
     }
+win() {
+    this.state = 'WIN';
+    this.isAnimating = false;
+    this.stopStats();
+    this.resetPosition();
+    this.music.stopMovementAudio();
+    this.music.playAchieved();
+    this.notify();
+}
 
     lose() {
         this.state = 'LOSE';
@@ -275,6 +287,15 @@ export class Game {
         this.notify();
     }
 
+lose() {
+    this.state = 'LOSE';
+    this.isAnimating = false;
+    this.stopStats();
+    this.resetPosition();
+    this.music.stopMovementAudio();
+    this.music.playGameOver();
+    this.notify();
+}
     resume() {
         if (this.state === 'PAUSED') {
             this.state = 'PLAYING';
@@ -290,6 +311,7 @@ export class Game {
             this.state = 'PAUSED';
             this.isAnimating = false;
             this.stopStats();
+            this.music.stopMovementAudio();
         } else if (this.state === 'PAUSED') {
             this.state = 'PLAYING';
             this.isAnimating = true;
@@ -308,9 +330,20 @@ export class Game {
     }
     // Controls Handling
     _setupControls() {
+        this.cameraMode = "thirdPerson";
+
         window.addEventListener("keydown", (e) => {
-            if (e.code in this.keys) this.keys[e.code] = true;
+            // Handle regular flight keys
+            if (e.code in this.keys) {
+                this.keys[e.code] = true;
+            }
+
+            // Toggle camera when Shift is pressed
+            if (e.code === "KeyC") {
+                this.toggleCameraMode();
+            }
         });
+
         window.addEventListener("keyup", (e) => {
             if (e.code in this.keys) {
                 this.keys[e.code] = false;
@@ -321,14 +354,6 @@ export class Game {
 
     _updateControls() {
         if (this.state !== 'PLAYING') return;
-
-        // Gradually increase forward speed to target speed
-        if (this.forwardSpeed < this.targetForwardSpeed) {
-            this.forwardSpeed += this.speedAcceleration;
-            if (this.forwardSpeed > this.targetForwardSpeed) {
-                this.forwardSpeed = this.targetForwardSpeed;
-            }
-        }
 
         if (this.keys.ArrowUp) {
             this.verticalVelocity += this.liftStrength;
@@ -378,6 +403,9 @@ export class Game {
         else if(this.plane.rotation.x>0){
             this.plane.rotation.x-=0.0015;
         }
+
+        console.log("this.plane.rotation.x:",this.plane.rotation.x);
+
     }
     // Animation Loop
     animate() {
@@ -391,12 +419,6 @@ export class Game {
 
         // Update moving clouds with fade animations
         updateClouds(this.cloudGroup, this.plane, this.camera, deltaTime);
-
-        // Rotate the circle
-        if (this.rotatingCircle) {
-            this.rotatingCircle.rotation.z += 0.02;
-        }
-
         this.camera.position.x = this.plane.position.x - 5 * Math.sin(this.plane.rotation.y);
         this.camera.position.z = this.plane.position.z - 5 * Math.cos(this.plane.rotation.y);
         this.camera.position.y = this.plane.position.y + 6;
