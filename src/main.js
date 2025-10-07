@@ -14,6 +14,45 @@ const gameScreen = document.getElementById('gameScreen');
 const progressFill = document.querySelector('.progress-fill');
 
 // -----------------
+// Countdown Animation Function
+// -----------------
+function startCountdown(callback) {
+    const overlay = document.getElementById('countdownOverlay');
+    const numberEl = document.getElementById('countdownNumber');
+    const sequence = ['3', '2', '1', 'GO!'];
+    let index = 0;
+
+    overlay.classList.add('active');
+
+    function showNext() {
+        if (index >= sequence.length) {
+            overlay.classList.remove('active');
+            if (callback) callback();
+            return;
+        }
+
+        const text = sequence[index];
+        numberEl.textContent = text;
+        numberEl.classList.remove('animate', 'go');
+        
+        if (text === 'GO!') {
+            numberEl.classList.add('go');
+        }
+
+        // Trigger animation
+        setTimeout(() => {
+            numberEl.classList.add('animate');
+        }, 10);
+
+        index++;
+        const delay = text === 'GO!' ? 1500 : 1000;
+        setTimeout(showNext, delay);
+    }
+
+    showNext();
+}
+
+// -----------------
 // Loading Simulation
 // -----------------
 let progress = 0;
@@ -54,12 +93,19 @@ backToMenu.addEventListener('click', () => {
 const selectLevel = document.querySelectorAll('.level-card');
 selectLevel.forEach(card => {
     card.addEventListener('click', () => {
+
         myGame.music.playButton();
         myGame.start();
+
         const level = card.dataset.level;
         document.getElementById('levelInfo').textContent = `Level: ${level}`;
         levelSelection.style.display = 'none';
         gameScreen.style.display = 'block';
+        
+        // Start countdown, then start game
+        startCountdown(() => {
+            myGame.start();
+        });
     });
 });
 
@@ -97,9 +143,14 @@ const restartButton = document.querySelector('#gameOverPopup #restartButton');
 const nextLevelButton = document.querySelector('#nextLevelButton');
 
 // -----------------
+
 // -----------------
 // Functions
 // -----------------
+function showGamePause() {
+    myGame.state = 'PAUSED';
+    exit.style.display = 'flex';
+}
 
 function showGameOverPopup() {
     // Don't change the game state - keep it as 'GAME_OVER'
@@ -142,7 +193,9 @@ quitButton.addEventListener('click', () => {
 restartButton.addEventListener('click', () => {
     myGame.music.playButton();
     gameOverPopup.style.display = 'none';
-    myGame.start();
+    // startCountdown(() => {
+    //     myGame.start();
+    // });
 });
 
 nextLevelButton.addEventListener('click', () => {
@@ -150,7 +203,9 @@ nextLevelButton.addEventListener('click', () => {
     gameOverPopup.style.display = 'none';
     myGame.level++;
     document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
-    myGame.start();
+    startCountdown(() => {
+        myGame.start();
+    });
 });
 
 // -----------------
@@ -162,7 +217,16 @@ const restartPauseButton = document.getElementById('restartPauseButton');
 const quitPauseButton = document.getElementById('quitPauseButton');
 
 resumeButton.addEventListener('click', () => {
+
     myGame.music.playButton();
+    // Hide exit popup
+    document.getElementById('exit').style.display = 'none';
+    myGame.isAnimating = false;
+    myGame.stopStats();
+    myGame.resetPosition();
+    myGame.state = 'MENU';
+    document.getElementById('gameScreen').style.display = 'none';
+    levelSelection.style.display = 'flex';
     pausePopup.style.display = 'none';
     myGame.resume(); // Resume the game
 });
@@ -170,7 +234,9 @@ resumeButton.addEventListener('click', () => {
 restartPauseButton.addEventListener('click', () => {
     myGame.music.playButton();
     pausePopup.style.display = 'none';
-    myGame.start(); // Restart the current level
+    startCountdown(() => {
+        myGame.start(); // Restart the current level
+    });
 });
 
 quitPauseButton.addEventListener('click', () => {
@@ -212,7 +278,7 @@ function showLosePopup() {
     losePopup.style.display = 'flex';
 }
 
-// Hook into game states (example)
+// Hook into game states
 myGame.onChange((game) => {
     if (game.state === 'WIN') {
         showWinPopup();
@@ -221,19 +287,23 @@ myGame.onChange((game) => {
     }
 });
 
-// Button events
+// Win popup button events
 nextWinLevelButton.addEventListener('click', () => {
     myGame.music.playButton();
     winPopup.style.display = 'none';
     myGame.level++;
     document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
-    myGame.start();
+    startCountdown(() => {
+        myGame.start();
+    });
 });
 
 restartWinButton.addEventListener('click', () => {
     myGame.music.playButton();
     winPopup.style.display = 'none';
-    myGame.start();
+    startCountdown(() => {
+        myGame.start();
+    });
 });
 
 quitWinButton.addEventListener('click', () => {
@@ -243,10 +313,13 @@ quitWinButton.addEventListener('click', () => {
     levelSelection.style.display = 'flex';
 });
 
+// Lose popup button events
 restartLoseButton.addEventListener('click', () => {
     myGame.music.playButton();
     losePopup.style.display = 'none';
-    myGame.start();
+    startCountdown(() => {
+        myGame.start();
+    });
 });
 
 quitLoseButton.addEventListener('click', () => {
