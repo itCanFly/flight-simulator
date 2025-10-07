@@ -32,6 +32,23 @@ export class Game {
 
         this.statsInterval = null;
 
+        // Altitude warning system
+        this.ALTITUDE_WARNING_THRESHOLD = 700; // Warning when getting too high
+        this.ALTITUDE_GAME_OVER_THRESHOLD = 900; // Game over threshold
+        this.isAltitudeWarningActive = false;
+        this.altitudeWarningElement = null;
+
+        // Ground collision system
+        this.TAKEOFF_HEIGHT_THRESHOLD = 5; // Height required to be considered "taken off"
+        this.GROUND_LEVEL = 1; // Ground level Y position
+        this.CRASH_THRESHOLD = 0.5; // Plane crashes when it hits close to ground level
+        this.hasTakenOff = false;
+
+        // Audio warning system
+        this.FUEL_WARNING_THRESHOLD = 5; // Fuel percentage for warning
+        this.hasPlayedFuelWarning = false;
+        this.hasPlayedAltitudeWarning = false;
+
         // Control keys
         this.keys = {
             ArrowUp: false,
@@ -104,6 +121,9 @@ export class Game {
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
 
+        // Initialize altitude warning system
+        this._initAltitudeWarning();
+
         // -----------------
         // Controls & Resize
         // -----------------
@@ -116,6 +136,97 @@ export class Game {
         // Start with menu music
         this.music.playMenu();
     }
+    // Altitude Warning System
+    // -----------------
+    _initAltitudeWarning() {
+        this.altitudeWarningElement = document.getElementById('altitudeWarning');
+    }
+
+    _checkAltitude() {
+        const planeY = this.plane.position.y;
+
+        // Check for game over first (higher threshold)
+        if (planeY > this.ALTITUDE_GAME_OVER_THRESHOLD) {
+            this.gameOver();
+            return;
+        }
+
+        // Check for warning threshold
+        if (planeY > this.ALTITUDE_WARNING_THRESHOLD) {
+            if (!this.isAltitudeWarningActive) {
+                this._showAltitudeWarning();
+            }
+        } else {
+            if (this.isAltitudeWarningActive) {
+                this._hideAltitudeWarning();
+            }
+        }
+    }
+
+    _showAltitudeWarning() {
+        this.isAltitudeWarningActive = true;
+        if (this.altitudeWarningElement) {
+            this.altitudeWarningElement.classList.remove('hidden');
+        }
+        
+        // Play fuel warning audio for altitude warning (only once per warning)
+        if (!this.hasPlayedAltitudeWarning) {
+            this.music.playFuelWarning();
+            this.hasPlayedAltitudeWarning = true;
+        }
+    }
+
+    _hideAltitudeWarning() {
+        this.isAltitudeWarningActive = false;
+        if (this.altitudeWarningElement) {
+            this.altitudeWarningElement.classList.add('hidden');
+        }
+        
+        // Reset altitude warning audio flag when warning disappears
+        this.hasPlayedAltitudeWarning = false;
+    }
+
+    // Fuel Warning System
+    // -----------------
+    _checkFuelWarning() {
+        const fuelPercentage = this.stats.fuel;
+
+        // Check if fuel is at or below 5%
+        if (fuelPercentage <= this.FUEL_WARNING_THRESHOLD && fuelPercentage > 0) {
+            if (!this.hasPlayedFuelWarning) {
+                this.music.playFuelWarning();
+                this.hasPlayedFuelWarning = true;
+                console.log("Fuel warning: Low fuel at " + fuelPercentage + "%");
+            }
+        } else if (fuelPercentage > this.FUEL_WARNING_THRESHOLD) {
+            // Reset the flag when fuel goes back above threshold
+            this.hasPlayedFuelWarning = false;
+        }
+    }
+
+    // Ground Collision System
+    // -----------------
+    _checkGroundCollision() {
+        const planeY = this.plane.position.y;
+
+        // Check if plane has taken off (reached sufficient height)
+        if (!this.hasTakenOff && planeY > this.TAKEOFF_HEIGHT_THRESHOLD) {
+            this.hasTakenOff = true;
+            console.log("Plane has taken off!");
+        }
+
+        // Check for ground collision after takeoff (use crash threshold for more realistic detection)
+        if (this.hasTakenOff && planeY <= this.CRASH_THRESHOLD) {
+            console.log("Ground collision detected - Game Over! Plane Y: " + planeY);
+            // Play crash sound immediately
+            this.music.playCrash();
+            this.gameOver();
+            return true; // Collision detected
+        }
+
+        return false; // No collision
+    }
+
     // Stats Handling
     // -----------------
     startStats() {
@@ -148,6 +259,12 @@ export class Game {
         this.verticalVelocity = 0;
         this.resetPosition();
         this.resetStats();
+        
+        // Ensure altitude warning is hidden at start
+        this._hideAltitudeWarning();
+
+        // Start game background music
+        this.music.playGame();
 
         this.isAnimating = true;
         this.animate();
@@ -229,6 +346,16 @@ lose() {
         this.verticalVelocity = 0;
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
+        
+        // Hide altitude warning when resetting
+        this._hideAltitudeWarning();
+        
+        // Reset takeoff state
+        this.hasTakenOff = false;
+        
+        // Reset audio warning flags
+        this.hasPlayedFuelWarning = false;
+        this.hasPlayedAltitudeWarning = false;
     }
     // Controls Handling
     _setupControls() {
@@ -270,6 +397,12 @@ lose() {
         console.log("Position y = ",this.plane.position.y);
         console.log("Position z = ",this.plane.position.z);
 
+        // Check altitude for warnings and game over
+        this._checkAltitude();
+
+        // Check fuel level for warnings
+        this._checkFuelWarning();
+
         // if(this.plane.position.z>=1500){
         //     this.win();
         // }
@@ -294,9 +427,15 @@ lose() {
         }
 
 
-        if (this.plane.position.y < 1) {
-            this.plane.position.y = 1;
-            this.verticalVelocity = 0;
+        // Check for ground collision (includes takeoff detection)
+        const hasCollided = this._checkGroundCollision();
+        
+        // Only apply ground constraint if no collision occurred and plane hasn't taken off
+        if (!hasCollided && !this.hasTakenOff) {
+            if (this.plane.position.y < this.GROUND_LEVEL) {
+                this.plane.position.y = this.GROUND_LEVEL;
+                this.verticalVelocity = 0;
+            }
         }
         if (this.plane.rotation.z<0){
             this.plane.rotation.z+=0.0015;

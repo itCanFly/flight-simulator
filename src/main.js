@@ -97,23 +97,12 @@ const restartButton = document.querySelector('#gameOverPopup #restartButton');
 const nextLevelButton = document.querySelector('#nextLevelButton');
 
 // -----------------
-// Exit Popup
-// -----------------
-const exit = document.getElementById('exit');
-const exitQuitButton = document.querySelector('#exit #quitButton');
-const exitRestartButton = document.querySelector('#exit #restartButton');
-const resumeButton = document.querySelector('#exit #resumeButton');
 // -----------------
 // Functions
 // -----------------
 
-function showGamePause() {
-    myGame.state = 'PAUSED';
-    exit.style.display = 'flex';
-}
-
 function showGameOverPopup() {
-    myGame.state = 'PAUSED';
+    // Don't change the game state - keep it as 'GAME_OVER'
     finalScore.textContent = `Score: ${myGame.score}`;
     gameOverPopup.style.display = 'flex';
 }
@@ -125,9 +114,6 @@ myGame.onChange(game => {
     if (game.state === 'GAME_OVER') {
         showGameOverPopup();
     }
-    else if (game.state === 'PAUSED'){
-        showGamePause();
-    }
 });
 
 // -----------------
@@ -135,15 +121,22 @@ myGame.onChange(game => {
 // -----------------
 backToLevel.addEventListener('click', () => {
     myGame.music.playButton();
-    showGamePause();
+    // Show pause popup instead of directly going to levels
+    myGame.changeState(); // Pause the game
+    document.getElementById('pausePopup').style.display = 'flex';
 });
 
 quitButton.addEventListener('click', () => {
     myGame.music.playButton();
     gameOverPopup.style.display = 'none';
     gameScreen.style.display = 'none';
-    myGame.gameOver();
-    mainMenu.style.display = 'flex';
+    // Reset game state properly without calling gameOver() again
+    myGame.isAnimating = false;
+    myGame.stopStats();
+    myGame.resetPosition();
+    myGame.state = 'MENU';
+    // Go to levels instead of main menu
+    levelSelection.style.display = 'flex';
 });
 
 restartButton.addEventListener('click', () => {
@@ -160,34 +153,40 @@ nextLevelButton.addEventListener('click', () => {
     myGame.start();
 });
 
-// Exit popup actions
-exitQuitButton.addEventListener('click', () => {
+// -----------------
+// Pause Popup Handlers
+// -----------------
+const pausePopup = document.getElementById('pausePopup');
+const resumeButton = document.getElementById('resumeButton');
+const restartPauseButton = document.getElementById('restartPauseButton');
+const quitPauseButton = document.getElementById('quitPauseButton');
+
+resumeButton.addEventListener('click', () => {
     myGame.music.playButton();
-    // Hide exit popup
-    document.getElementById('exit').style.display = 'none';
+    pausePopup.style.display = 'none';
+    myGame.resume(); // Resume the game
+});
 
-    // Stop the game
-    myGame.isAnimating = false;   // stop animation loop
-    myGame.stopStats();           // stop stats interval
-    myGame.resetPosition();       // reset plane to start
-    myGame.state = 'MENU';        // set game state back to menu
+restartPauseButton.addEventListener('click', () => {
+    myGame.music.playButton();
+    pausePopup.style.display = 'none';
+    myGame.start(); // Restart the current level
+});
 
-    // Hide game screen and go back to main menu
-    document.getElementById('gameScreen').style.display = 'none';
+quitPauseButton.addEventListener('click', () => {
+    myGame.music.playButton();
+    pausePopup.style.display = 'none';
+    gameScreen.style.display = 'none';
+    // Reset game state
+    myGame.isAnimating = false;
+    myGame.stopStats();
+    myGame.resetPosition();
+    myGame.state = 'MENU';
+    // Go to level selection
     levelSelection.style.display = 'flex';
 });
 
-exitRestartButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    exit.style.display = 'none';
-    myGame.start();
-});
-
-resumeButton.addEventListener('click',()=>{
-    myGame.music.playButton();
-    exit.style.display = 'none';
-    myGame.resume();
-})
+// Removed exit popup - using only Game Over popup now
 
 const winPopup = document.getElementById('winPopup');
 const losePopup = document.getElementById('losePopup');
@@ -241,7 +240,7 @@ quitWinButton.addEventListener('click', () => {
     myGame.music.playButton();
     winPopup.style.display = 'none';
     gameScreen.style.display = 'none';
-    mainMenu.style.display = 'flex';
+    levelSelection.style.display = 'flex';
 });
 
 restartLoseButton.addEventListener('click', () => {
@@ -254,5 +253,5 @@ quitLoseButton.addEventListener('click', () => {
     myGame.music.playButton();
     losePopup.style.display = 'none';
     gameScreen.style.display = 'none';
-    mainMenu.style.display = 'flex';
+    levelSelection.style.display = 'flex';
 });

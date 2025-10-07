@@ -62,6 +62,12 @@
                     <span class="stat-value" id="timeValue">0:00</span>
                 </div>
             </div>
+            
+            <!-- Altitude Warning Display -->
+            <div id="altitudeWarning" class="altitude-warning hidden">
+                <div class="warning-text">⚠️ ALTITUDE WARNING ⚠️</div>
+                <div class="warning-subtitle">DESCEND IMMEDIATELY</div>
+            </div>
         </div>
         <!-- Game Over Popup -->
         <div id="gameOverPopup" class="popup">
@@ -76,16 +82,18 @@
             </div>
         </div>
 
-        <div id="exit" class="popup">
+        <!-- Pause Popup -->
+        <div id="pausePopup" class="popup">
             <div class="popup-content">
-                <h2>Exit Game</h2>
+                <h2>Game Paused</h2>
                 <div class="popup-buttons">
-                    <button id="quitButton">Quit</button>
-                    <button id="restartButton">Restart</button>
                     <button id="resumeButton">Resume</button>
+                    <button id="restartPauseButton">Restart</button>
+                    <button id="quitPauseButton">Quit </button>
                 </div>
             </div>
         </div>
+
         <!-- Win Popup -->
 <div id="winPopup" class="popup">
   <div class="popup-content">
