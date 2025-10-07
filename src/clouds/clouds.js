@@ -2,7 +2,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Path to the new GLB cloud asset (user mentioned new cloud.glb; actual file present is clouds.glb)
 // If you rename the asset to cloud.glb just update this constant.
 const CLOUD_GLB_PATH = 'assets/models/clouds.glb';
 // Debug toggle for verbose cloud system logging
@@ -23,20 +22,16 @@ const FOG_OVERLAY_CONFIG = {
 // Cloud configuration
 // Altitude offset to raise entire cloud layer without hunting through code.
 // Increase this value to push clouds higher globally. Example: 0 -> original, 150 -> much higher sky layer.
-const CLOUD_ALTITUDE_OFFSET = 150; // << raised layer
+const CLOUD_ALTITUDE_OFFSET = 350; // << raised layer
 
 const CLOUD_CONFIG = {
-  count: 200,                    // Total number of cloud clusters
-  spawnDistance: 1000,          // How far ahead to spawn clouds
-  // recycleDistance removed (recycling now based purely on distance from plane)
+  count: 300,                    // More clouds for better coverage
+  spawnDistance: 2000,          // Reasonable spawn distance for good coverage
   fadeInDuration: 2.0,          // Seconds to fade in
-  fadeOutDuration: 1.5,         // Seconds to fade out
-  fadeOutDistance: 150,         // Start fading when this close to recycling
-  // Elevated base/min/max heights (original 15–90). We add CLOUD_ALTITUDE_OFFSET so
   // gameplay plane (y≈1–10) flies well below cloud deck.
   minHeight: 15 + CLOUD_ALTITUDE_OFFSET,
   maxHeight: 90 + CLOUD_ALTITUDE_OFFSET,
-  spreadX: 450,                 // Horizontal spread
+  spreadX: 600,                 // Horizontal spread
   
   // Lighting properties
   sunColor: new THREE.Color(0xffddaa),       // Warm sunlight color
@@ -67,15 +62,13 @@ function createCloudCluster(cloudTexture, directionalLight) {
   // Fallback / alternative detailed (non-instanced) version kept for reference
   const cluster = new THREE.Group();
   
-  // MORE spheres for fluffier, more 3D appearance
-  const puffCount = THREE.MathUtils.randInt(15, 30);
+  // spheres for better visibility
+  const puffCount = THREE.MathUtils.randInt(8, 18);
   
   // Store fade properties and lighting info on the cluster
   cluster.userData = {
     fadeProgress: 0,          // 0 to 1 for fade in
-    targetOpacity: THREE.MathUtils.randFloat(0.75, 0.95),
-    isFadingOut: false,
-    fadeOutProgress: 0,
+    targetOpacity: THREE.MathUtils.randFloat(0.45, 0.70), // Reduced opacity for better visibility
     baseScale: THREE.MathUtils.randFloat(1.8, 3.5),
     directionalLight: directionalLight, // Store reference for lighting updates
     driftSeed: Math.random() * 1000,
@@ -225,7 +218,7 @@ function createCloudCluster(cloudTexture, directionalLight) {
  */
 function createInstancedPlaceholderCluster(cloudTexture, directionalLight) {
   const cluster = new THREE.Group();
-  const puffCount = THREE.MathUtils.randInt(18, 32);
+  const puffCount = THREE.MathUtils.randInt(10, 20); // Reduced for better visibility
   const baseScale = THREE.MathUtils.randFloat(1.8, 3.5);
 
   const geometry = new THREE.SphereGeometry(18, 12, 10); // base shape; per-instance scaling will vary
@@ -262,9 +255,7 @@ function createInstancedPlaceholderCluster(cloudTexture, directionalLight) {
   cluster.add(instanced);
   cluster.userData = {
     fadeProgress: 0,
-    targetOpacity: THREE.MathUtils.randFloat(0.75, 0.92),
-    isFadingOut: false,
-    fadeOutProgress: 0,
+    targetOpacity: THREE.MathUtils.randFloat(0.45, 0.70), // Reduced opacity for better visibility
     baseScale,
     directionalLight,
     driftSeed: Math.random()*1000,
@@ -369,18 +360,32 @@ export function createClouds(scene, directionalLight = null) {
     directionalLight.position.set(1, 1, 1);
   }
 
-  // Create initial procedural placeholder clusters (will be replaced by GLB once loaded)
+  // Create initial procedural placeholder clusters covering large atmospheric area
+  // Use multiple rings/layers for natural distribution across the entire sky
+  const totalArea = CLOUD_CONFIG.spawnDistance * 4; // Large sky coverage area
+  
   for (let i = 0; i < CLOUD_CONFIG.count; i++) {
     const cluster = createCloudCluster(cloudTexture, directionalLight);
-    const angle = Math.random() * Math.PI * 2;
-    const distance = THREE.MathUtils.randFloat(200, CLOUD_CONFIG.spawnDistance);
+    
+    // Create layered circular distribution for natural sky coverage
+    const layer = Math.floor(i / (CLOUD_CONFIG.count / 3)); // 3 layers
+    const layerRadius = (layer + 1) * (totalArea / 6); // Different radii per layer
+    const angle = (i * 2.4) + (layer * 0.8); // Offset each layer
+    
+    // Add variation within each layer
+    const radiusVariation = layerRadius * 0.4;
+    const finalRadius = layerRadius + THREE.MathUtils.randFloat(-radiusVariation, radiusVariation);
+    
     cluster.position.set(
-      Math.cos(angle) * distance,
+      Math.cos(angle) * finalRadius,
       THREE.MathUtils.randFloat(CLOUD_CONFIG.minHeight, CLOUD_CONFIG.maxHeight),
-      Math.sin(angle) * distance
+      Math.sin(angle) * finalRadius
     );
+    
     cluster.rotation.y = Math.random() * Math.PI * 2;
     cluster.scale.setScalar(cluster.userData.baseScale || 1);
+    
+    // Start all clouds at full opacity for immediate sky coverage
     cluster.userData.fadeProgress = 1.0;
     updateCloudOpacity(cluster, cluster.userData.targetOpacity);
     updateCloudLighting(cluster, directionalLight);
@@ -455,17 +460,18 @@ export function createClouds(scene, directionalLight = null) {
   const instanced = new THREE.InstancedMesh(farGeometry, farMaterial, CLOUD_CONFIG.farBillboardCount);
   instanced.name = 'FarCloudBillboards';
   const dummy = new THREE.Object3D();
+  // Distribute far background clouds across distant horizon
   for (let i = 0; i < CLOUD_CONFIG.farBillboardCount; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const radius = THREE.MathUtils.randFloat(CLOUD_CONFIG.spawnDistance * 0.9, CLOUD_CONFIG.spawnDistance * 1.2);
+    const angle = (i / CLOUD_CONFIG.farBillboardCount) * Math.PI * 2;
+    const distance = THREE.MathUtils.randFloat(CLOUD_CONFIG.spawnDistance * 1.5, CLOUD_CONFIG.spawnDistance * 3);
+    
     dummy.position.set(
-      Math.cos(angle) * radius,
-      // Elevated far billboard layer too (add offset implicitly via config values already adjusted)
+      Math.cos(angle) * distance,
       THREE.MathUtils.randFloat(CLOUD_CONFIG.minHeight + 10, CLOUD_CONFIG.maxHeight + 40),
-      Math.sin(angle) * radius
+      Math.sin(angle) * distance
     );
     dummy.rotation.y = Math.random() * Math.PI * 2;
-    const s = THREE.MathUtils.randFloat(0.8, 2.2);
+    const s = THREE.MathUtils.randFloat(1.2, 3.0); // Larger far clouds
     dummy.scale.set(s, s, s);
     dummy.updateMatrix();
     instanced.setMatrixAt(i, dummy.matrix);
@@ -524,33 +530,8 @@ export function updateClouds(cloudGroup, plane, camera, deltaTime) {
     const distanceFromPlane = cloud.position.distanceTo(plane.position);
     
     
-    if (cloud.userData.fadeProgress < 1.0 && !cloud.userData.isFadingOut) {
-      cloud.userData.fadeProgress += deltaTime / CLOUD_CONFIG.fadeInDuration;
-      cloud.userData.fadeProgress = Math.min(cloud.userData.fadeProgress, 1.0);
-      
-      // Smooth fade in using easing
-      const easedProgress = easeInOutCubic(cloud.userData.fadeProgress);
-      const currentOpacity = easedProgress * cloud.userData.targetOpacity;
-      updateCloudOpacity(cloud, currentOpacity);
-    }
-    
-   
-    // Start fading out when far from plane
-    if (distanceFromPlane > CLOUD_CONFIG.spawnDistance - CLOUD_CONFIG.fadeOutDistance && 
-        !cloud.userData.isFadingOut) {
-      cloud.userData.isFadingOut = true;
-      cloud.userData.fadeOutProgress = 0;
-    }
-    
-    if (cloud.userData.isFadingOut) {
-      cloud.userData.fadeOutProgress += deltaTime / CLOUD_CONFIG.fadeOutDuration;
-      cloud.userData.fadeOutProgress = Math.min(cloud.userData.fadeOutProgress, 1.0);
-      
-      // Smooth fade out
-      const fadeOutAmount = 1.0 - easeInOutCubic(cloud.userData.fadeOutProgress);
-      const currentOpacity = fadeOutAmount * cloud.userData.targetOpacity;
-      updateCloudOpacity(cloud, currentOpacity);
-    }
+    // Keep all clouds at full opacity immediately - no fade in
+    updateCloudOpacity(cloud, cloud.userData.targetOpacity);
     
     // === DRIFT (lightweight pseudo-noise) ===
     const seed = cloud.userData.driftSeed;
@@ -599,11 +580,9 @@ export function updateClouds(cloudGroup, plane, camera, deltaTime) {
       
       cloud.rotation.y = Math.random() * Math.PI * 2;
       
-      // Reset fade state for fade in
-      cloud.userData.fadeProgress = 0;
-      cloud.userData.isFadingOut = false;
-      cloud.userData.fadeOutProgress = 0;
-      updateCloudOpacity(cloud, 0);
+      // Keep clouds at full opacity when recycling to avoid gaps
+      cloud.userData.fadeProgress = 1.0;
+      updateCloudOpacity(cloud, cloud.userData.targetOpacity);
       
       // Update lighting for newly spawned cloud
       if (cloud.userData.directionalLight) {
