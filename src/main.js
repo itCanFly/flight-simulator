@@ -36,11 +36,13 @@ const backToMenu = document.getElementById('backToMenuButton');
 const backToLevel = document.getElementById('backToLevelsButton');
 
 playButton.addEventListener('click', () => {
+    myGame.music.playButton();
     mainMenu.style.display = 'none';
     levelSelection.style.display = 'flex';
 });
 
 backToMenu.addEventListener('click', () => {
+    myGame.music.playButton();
     levelSelection.style.display = 'none';
     mainMenu.style.display = 'flex';
 });
@@ -51,6 +53,7 @@ backToMenu.addEventListener('click', () => {
 const selectLevel = document.querySelectorAll('.level-card');
 selectLevel.forEach(card => {
     card.addEventListener('click', () => {
+        myGame.music.playButton();
         myGame.start();
         const level = card.dataset.level;
         document.getElementById('levelInfo').textContent = `Level: ${level}`;
@@ -127,10 +130,12 @@ myGame.onChange(game => {
 // Button Handlers
 // -----------------
 backToLevel.addEventListener('click', () => {
+    myGame.music.playButton();
     showGamePause();
 });
 
 quitButton.addEventListener('click', () => {
+    myGame.music.playButton();
     gameOverPopup.style.display = 'none';
     gameScreen.style.display = 'none';
     myGame.gameOver();
@@ -138,11 +143,13 @@ quitButton.addEventListener('click', () => {
 });
 
 restartButton.addEventListener('click', () => {
+    myGame.music.playButton();
     gameOverPopup.style.display = 'none';
     myGame.start();
 });
 
 nextLevelButton.addEventListener('click', () => {
+    myGame.music.playButton();
     gameOverPopup.style.display = 'none';
     myGame.level++;
     document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
@@ -151,6 +158,7 @@ nextLevelButton.addEventListener('click', () => {
 
 // Exit popup actions
 exitQuitButton.addEventListener('click', () => {
+    myGame.music.playButton();
     // Hide exit popup
     document.getElementById('exit').style.display = 'none';
 
@@ -166,11 +174,13 @@ exitQuitButton.addEventListener('click', () => {
 });
 
 exitRestartButton.addEventListener('click', () => {
+    myGame.music.playButton();
     exit.style.display = 'none';
     myGame.start();
 });
 
 resumeButton.addEventListener('click',()=>{
+    myGame.music.playButton();
     exit.style.display = 'none';
     myGame.resume();
 })
@@ -210,6 +220,7 @@ myGame.onChange((game) => {
 
 // Button events
 nextWinLevelButton.addEventListener('click', () => {
+    myGame.music.playButton();
     winPopup.style.display = 'none';
     myGame.level++;
     document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
@@ -217,22 +228,26 @@ nextWinLevelButton.addEventListener('click', () => {
 });
 
 restartWinButton.addEventListener('click', () => {
+    myGame.music.playButton();
     winPopup.style.display = 'none';
     myGame.start();
 });
 
 quitWinButton.addEventListener('click', () => {
+    myGame.music.playButton();
     winPopup.style.display = 'none';
     gameScreen.style.display = 'none';
     mainMenu.style.display = 'flex';
 });
 
 restartLoseButton.addEventListener('click', () => {
+    myGame.music.playButton();
     losePopup.style.display = 'none';
     myGame.start();
 });
 
 quitLoseButton.addEventListener('click', () => {
+    myGame.music.playButton();
     losePopup.style.display = 'none';
     gameScreen.style.display = 'none';
     mainMenu.style.display = 'flex';

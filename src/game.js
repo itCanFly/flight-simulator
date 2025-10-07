@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { createPlane } from './plane.js';
 import { createClouds, updateClouds } from './clouds/clouds.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Music } from './audio/Music.js';
 
 export class Game {
     constructor(containerId) {
@@ -80,9 +81,11 @@ export class Game {
         this.plane = createPlane();
         this.scene.add(this.plane);
 
-    //  Add volumetric-looking clouds with sunlight integration
+        //  Add volumetric-looking clouds with sunlight integration
         this.cloudGroup = createClouds(this.scene, this.sunLight);
-    // Storm system removed (all related code deleted per request)
+    
+        // Audio system
+        this.music = new Music();
         // Camera initial pos
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
@@ -95,6 +98,9 @@ export class Game {
 
         // Animation
         this.isAnimating = false;
+        
+        // Start with menu music
+        this.music.playMenu();
     }
     // Stats Handling
     // -----------------
@@ -105,6 +111,10 @@ export class Game {
                 this.stopStats();
                 this.gameOver();
                 return;
+            }
+            // Play fuel warning when low
+            if (this.fuel <= 20 && this.fuel > 0) {
+                this.music.playFuelWarning();
             }
             this.speed = Math.min(this.speed, 500);
             this.fuel = Math.max(this.fuel, 0);
@@ -146,6 +156,7 @@ export class Game {
         this.isAnimating = true;
         this.animate();
         this.startStats();
+
         this.notify();
     }
     gameOver() {
@@ -153,6 +164,8 @@ export class Game {
         this.isAnimating = false;
         this.stopStats();
         this.resetPosition();
+        this.music.stopMovementAudio();
+        this.music.playGameOver();
         this.notify();
     }
 win() {
@@ -160,6 +173,8 @@ win() {
     this.isAnimating = false;
     this.stopStats();
     this.resetPosition();
+    this.music.stopMovementAudio();
+    this.music.playAchieved();
     this.notify();
 }
 
@@ -168,6 +183,8 @@ lose() {
     this.isAnimating = false;
     this.stopStats();
     this.resetPosition();
+    this.music.stopMovementAudio();
+    this.music.playGameOver();
     this.notify();
 }
     resume() {
@@ -175,7 +192,7 @@ lose() {
         this.state = 'PLAYING';
         this.isAnimating = true;
         this.animate();     
-        this.startStats();  
+        this.startStats();
         this.notify();      
     }
 }
@@ -184,6 +201,7 @@ lose() {
             this.state = 'PAUSED';
             this.isAnimating = false;
             this.stopStats();
+            this.music.stopMovementAudio();
         } else if (this.state === 'PAUSED') {
             this.state = 'PLAYING';
             this.isAnimating = true;
@@ -214,14 +232,20 @@ lose() {
     }
 
     _updateControls() {
-        if (this.state !== 'PLAYING') return;
+        if (this.state !== 'PLAYING') {
+            // Stop movement audio when not playing
+            this.music.stopMovementAudio();
+            return;
+        }
+
+        // Check if plane is moving (any input or forward motion)
+        const isMoving = this.keys.ArrowUp || this.keys.ArrowLeft || this.keys.ArrowRight || this.forwardSpeed > 0;
 
         if (this.keys.ArrowUp) this.verticalVelocity += this.liftStrength;
         this.verticalVelocity += this.gravity;
 
         this.plane.position.y += this.verticalVelocity;
         this.plane.translateZ(this.forwardSpeed);
-        console.log(this.plane.position.z);
         if(this.plane.position.z>=1500){
             this.win();
         }
@@ -232,6 +256,9 @@ lose() {
             this.plane.position.y = 1;
             this.verticalVelocity = 0;
         }
+
+        // Update movement audio based on plane motion
+        this.music.updateMovementAudio(isMoving);
     }
     // Animation Loop
     animate() {
