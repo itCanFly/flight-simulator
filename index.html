@@ -6,10 +6,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./src/styles/uiManager.css">
     <title>flight-simulator</title>
+    <style>
+        /* Countdown Animation Styles */
+        #countdownOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+        }
+
+        #countdownOverlay.active {
+            display: flex;
+        }
+
+        .countdown-number {
+            position: absolute;
+            font-size: 15rem;
+            font-weight: bold;
+            color: #fff;
+            opacity: 0;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        .countdown-number.animate {
+            animation: countdownAnim 1s ease-in-out forwards;
+        }
+
+        .countdown-number.go {
+            font-size: 12rem;
+        }
+
+        .countdown-number.go.animate {
+            animation: countdownAnim 1.5s ease-in-out forwards;
+        }
+
+        @keyframes countdownAnim {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) rotate(-10deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(5deg);
+            }
+            80% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8) rotate(3deg);
+            }
+        }
+    </style>
   </head>
   <body>
     <div id="app"></div>
      <div id="gameContainer">
+        <!-- Countdown Overlay -->
+        <div id="countdownOverlay">
+            <div class="countdown-number" id="countdownNumber"></div>
+        </div>
+
         <!-- Loading Screen -->
         <div id="loadingScreen">
             <div class="loading-text">Loading</div>
@@ -112,6 +177,11 @@
   </div>
 </div>
 </div>
+
+    <script>
+
+    </script>
+
     <script type="module" src="./src/main.js"></script>
     <!-- <script type="module" src="./src/test.js"></script> -->
   </body>
