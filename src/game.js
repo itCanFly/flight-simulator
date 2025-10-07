@@ -5,6 +5,8 @@ import { applyTurbulence,shakeCamera } from './physics.js';
 import { createClouds, updateClouds } from './clouds/clouds.js';
 import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from './scene/stats.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createCurvedArrow,createStraightArrow } from './arrow.js';
+import { Music } from './audio/Music.js';
 
 
 export class Game {
@@ -22,7 +24,7 @@ export class Game {
         this.gravity = -0.005;
         this.liftStrength = 0.007;
         this.forwardSpeed = 0.5;
-        this.targetForwardSpeed = 0.5;
+        this.targetForwardSpeed = 1.5;
         this.minForwardSpeed = 0.1;
         this.speedAcceleration = 0.005;
 
@@ -109,9 +111,12 @@ export class Game {
         this.plane = createPlane();
         this.scene.add(this.plane);
 
-    //  Add volumetric-looking clouds with sunlight integration
         this.cloudGroup = createClouds(this.scene, this.sunLight);
-        // Camera initial pos
+
+        // Create rotating circle
+        this._createRotatingCircle();
+        // Audio system
+        this.music = new Music();        // Camera initial pos
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
 
@@ -148,7 +153,7 @@ export class Game {
         
         // Rotate to face sideways (normal at 90 degrees)
         this.rotatingCircle.rotation.x = Math.PI / 2;
-        
+        this.rotatingCircle.position.set(-2363, 1, -2304);
         this.scene.add(this.rotatingCircle);
     }
 
@@ -353,7 +358,22 @@ lose() {
     }
 
     _updateControls() {
-        if (this.state !== 'PLAYING') return;
+        if (this.state !== 'PLAYING') {
+            // Stop movement audio when not playing
+            this.music.stopMovementAudio();
+            return;
+        }
+
+        // Check if plane is moving (any input or forward motion)
+        const isMoving = this.keys.ArrowUp || this.keys.ArrowLeft || this.keys.ArrowRight || this.forwardSpeed > 0;
+
+        // Gradually increase forward speed to target speed
+        if (this.forwardSpeed < this.targetForwardSpeed) {
+            this.forwardSpeed += this.speedAcceleration;
+            if (this.forwardSpeed > this.targetForwardSpeed) {
+                this.forwardSpeed = this.targetForwardSpeed;
+            }
+        }
 
         if (this.keys.ArrowUp) {
             this.verticalVelocity += this.liftStrength;
@@ -404,8 +424,12 @@ lose() {
             this.plane.rotation.x-=0.0015;
         }
 
-        console.log("this.plane.rotation.x:",this.plane.rotation.x);
+        // Update movement audio based on plane motion
+        this.music.updateMovementAudio(isMoving);
+    }
 
+    toggleCameraMode() {
+        this.cameraMode = this.cameraMode === "thirdPerson" ? "topView" : "thirdPerson";
     }
     // Animation Loop
     animate() {
@@ -419,10 +443,30 @@ lose() {
 
         // Update moving clouds with fade animations
         updateClouds(this.cloudGroup, this.plane, this.camera, deltaTime);
+
+        // Rotate the circle
+        if (this.rotatingCircle) {
+            this.rotatingCircle.rotation.z += 0.02;
+        }
+
         this.camera.position.x = this.plane.position.x - 5 * Math.sin(this.plane.rotation.y);
         this.camera.position.z = this.plane.position.z - 5 * Math.cos(this.plane.rotation.y);
         this.camera.position.y = this.plane.position.y + 6;
         
+        if (this.cameraMode === "thirdPerson") {
+            this.camera.position.x = this.plane.position.x - 5 * Math.sin(this.plane.rotation.y);
+            this.camera.position.z = this.plane.position.z - 5 * Math.cos(this.plane.rotation.y);
+            this.camera.position.y = this.plane.position.y + 6;
+            
+        }
+        else if (this.cameraMode === "topView") {
+        // First-person (inside the plane)
+            this.camera.position.x = this.plane.position.x - 3 * Math.sin(this.plane.rotation.z) ;
+            this.camera.position.y = this.plane.position.y + 12.5; // height above
+            this.camera.position.z = this.plane.position.z - 3 * Math.cos(this.plane.rotation.z);
+            
+        }
+
         this.camera.lookAt(this.plane.position);
         // shakeCamera(this.camera,0.25);
         this.renderer.render(this.scene, this.camera);
