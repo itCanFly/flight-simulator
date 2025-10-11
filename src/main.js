@@ -193,9 +193,9 @@ quitButton.addEventListener('click', () => {
 restartButton.addEventListener('click', () => {
     myGame.music.playButton();
     gameOverPopup.style.display = 'none';
-    // startCountdown(() => {
-    //     myGame.start();
-    // });
+    startCountdown(() => {
+        myGame.start();
+    });
 });
 
 nextLevelButton.addEventListener('click', () => {

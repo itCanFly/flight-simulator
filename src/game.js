@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { createPlane } from './plane.js';
 import { applyTurbulence,shakeCamera } from './physics.js';
+import { createFuelCan } from './fuelTank.js';
 import { createClouds, updateClouds } from './clouds/clouds.js';
 import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from './scene/stats.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -128,6 +129,9 @@ export class Game {
         this.plane = createPlane();
         this.scene.add(this.plane);
 
+        // Fuel Cans
+        this.fuelCans = [];
+
         this.cloudGroup = createClouds(this.scene, this.sunLight);
 
         // Create rotating circle
@@ -180,7 +184,7 @@ export class Game {
     // Create arrows between waypoints
     _createArrows() {
         // Clear existing arrows
-        this.arrows.forEach(arrow => this.scene.remove(arrow));
+        // this.arrows.forEach(arrow => this.scene.remove(arrow));
         this.arrows = [];
 
         // Create arrows between consecutive waypoints
@@ -326,6 +330,37 @@ export class Game {
         return false; // No collision
     }
 
+    //Spawn fuel cans along arrow path
+    _createFuelCansAlongPath() {
+        this.fuelCans.forEach(c => this.scene.remove(c.group));
+        this.fuelCans = [];
+
+        for (let i = 0; i < this.waypoints.length - 1; i++) {
+            const start = this.waypoints[i];
+            const end = this.waypoints[i + 1];
+
+            const numCans = 1;
+            for (let j = 1; j <= numCans; j++) {
+                const t = j / (numCans + 1);
+                const pos = new THREE.Vector3().lerpVectors(start, end, t);
+                pos.y += 10;
+                const { group, update } = createFuelCan({
+                    size: 15,
+                    onPickup: () => {
+                        this.stats.fuel = Math.min(100, this.stats.fuel + 25); 
+                        console.log("Fuel picked up! Current fuel:", this.stats.fuel);
+                    },
+                });
+
+                group.position.copy(pos);
+                group.userData.startY = pos.y;
+                this.scene.add(group);
+                this.fuelCans.push({ group, update });
+            }
+        }
+    }
+
+
     // Stats Handling
     // -----------------
     startStats() {
@@ -359,6 +394,7 @@ export class Game {
         this.forwardSpeed = this.minForwardSpeed; 
         this.currentWaypointIndex = 0;
         this._createArrows(); 
+        this._createFuelCansAlongPath();
 
         this.resetPosition();
         this.resetStats();
@@ -578,6 +614,9 @@ lose() {
         // Get delta time for smooth animations
         const deltaTime = this.clock.getDelta();
 
+        for (const can of this.fuelCans) {
+            can.update(deltaTime, this.plane.position);
+        }
         this._updateControls();
 
         // Update moving clouds with fade animations

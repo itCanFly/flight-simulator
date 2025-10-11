@@ -36,7 +36,7 @@ export class Music {
         this.menuAudio.volume = 0.3;
         this.gameAudio.volume = 0.7;
         this.gameOverAudio.volume = 0.4;
-        this.crashAudio.volume = 0.5;
+        this.crashAudio.volume = 1.0;
         
         // Configure plane movement audio if it exists
         if (this.planeMovementAudio) {
