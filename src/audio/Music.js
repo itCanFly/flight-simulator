@@ -3,7 +3,9 @@ export class Music {
     constructor() {
         // Core audio files (these should exist)
         this.menuAudio = new Audio('./assets/audio/before_game_starts.mp3');
-        this.gameOverAudio = new Audio('./assets/audio/gameover.mp3');
+        this.gameAudio = new Audio('./assets/audio/main_game_sound.mp3');
+        this.gameOverAudio = new Audio('./assets/audio/main_game_sound.mp3');
+        this.crashAudio = new Audio('./assets/audio/crash.mp3');
         
         // Optional audio files (may not exist yet)
         this.fuelWarningAudio = this.createOptionalAudio('./assets/audio/fuel_warning.mp3');
@@ -12,29 +14,41 @@ export class Music {
         this.achievedAudio = this.createOptionalAudio('./assets/audio/achieved_sound.mp3');
         this.planeMovementAudio = this.createOptionalAudio('./assets/audio/plane_moving_sound.mp3');
 
-        // Configure core audio
+        // Configure core audio with error handling
         this.menuAudio.preload = 'auto';
+        this.gameAudio.preload = 'auto';
         this.gameOverAudio.preload = 'auto';
+        this.crashAudio.preload = 'auto';
+        
+        // Add error handling for core audio files
+        this.menuAudio.addEventListener('error', (e) => console.warn('Menu audio error:', e));
+        this.gameAudio.addEventListener('error', (e) => console.warn('Game audio error:', e));
+        this.gameOverAudio.addEventListener('error', (e) => console.warn('Game over audio error:', e));
+        this.crashAudio.addEventListener('error', (e) => console.warn('Crash audio error:', e));
         
         // Loop settings
         this.menuAudio.loop = true;
+        this.gameAudio.loop = true;
         this.gameOverAudio.loop = false; 
+        this.crashAudio.loop = false;
         
         // Set reasonable volumes (20-50%)
         this.menuAudio.volume = 0.3;
+        this.gameAudio.volume = 0.7;
         this.gameOverAudio.volume = 0.4;
+        this.crashAudio.volume = 1.0;
         
         // Configure plane movement audio if it exists
         if (this.planeMovementAudio) {
             this.planeMovementAudio.loop = true;
-            this.planeMovementAudio.volume = 0.1;
+            this.planeMovementAudio.volume = 0.08;
         }
         
         // Track movement audio state
         this.isMovementAudioPlaying = false;
         
-        // Track user interaction for autoplay policy
-        this.hasUserInteracted = false;
+        // Auto-start music after loading
+        this.hasUserInteracted = true;
         this.pendingMenuMusic = false;
         
         // Audio transition settings
@@ -47,15 +61,16 @@ export class Music {
         // Store target volumes for each audio
         this.targetVolumes = {
             menu: 0.3,
+            game: 0.5,
             gameOver: 0.4,
-            movement: 0.3
+            movement: 0.08
         };
         
         // Track current fade operations
         this.activeFades = new Set();
         
-        // Listen for first user interaction
-        this.setupUserInteractionListener();
+        // Auto-start music after page load
+        this.initAutoplay();
     }
 
     // Helper to create optional audio that won't break if file doesn't exist
@@ -159,6 +174,22 @@ export class Music {
         this.activeFades.clear();
     }
 
+    initAutoplay() {
+        // Try to enable autoplay after a short delay
+        setTimeout(() => {
+            // Attempt to play a silent audio to enable autoplay context
+            const silentAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjie3O6/eSsFJnzS6NCCMwgcW7Ps2JJXFg1Kqd3qp2seB0md3fHNfSsHJoTA8dOFOAgYYrjn5KJOFAhKn+H1vWoBETK3);');
+            silentAudio.volume = 0;
+            silentAudio.play().then(() => {
+                console.log("🎵 Autoplay enabled");
+            }).catch(err => {
+                console.log("🎵 Autoplay blocked, will start on first interaction");
+                this.hasUserInteracted = false;
+                this.setupUserInteractionListener();
+            });
+        }, 100);
+    }
+
     setupUserInteractionListener() {
         const handleUserInteraction = () => {
             this.hasUserInteracted = true;
@@ -181,18 +212,22 @@ export class Music {
     }
 
     playMenu() {
-        if (this.hasUserInteracted) {
-            // Find currently playing audio to fade from
-            let currentAudio = null;
-            if (!this.gameOverAudio.paused) currentAudio = this.gameOverAudio;
-            
-            // Cross-fade to menu music
-            this.crossFade(currentAudio, this.menuAudio, this.targetVolumes.menu);
-        } else {
-            // Wait for user interaction
-            this.pendingMenuMusic = true;
-            console.log("🎵 Menu music ready - click anywhere or press any key to start audio");
-        }
+        // Find currently playing audio to fade from
+        let currentAudio = null;
+        if (!this.gameOverAudio.paused) currentAudio = this.gameOverAudio;
+        if (!this.gameAudio.paused) currentAudio = this.gameAudio;
+        
+        // Start menu music automatically
+        this.crossFade(currentAudio, this.menuAudio, this.targetVolumes.menu);
+    }
+
+    playGame() {
+        // Find currently playing audio to fade from
+        let currentAudio = null;
+        if (!this.menuAudio.paused) currentAudio = this.menuAudio;
+        
+        // Cross-fade to game music
+        this.crossFade(currentAudio, this.gameAudio, this.targetVolumes.game);
     }
 
     playGameOver() {
@@ -202,6 +237,14 @@ export class Music {
         
         // Cross-fade to game over music
         this.crossFade(currentAudio, this.gameOverAudio, this.targetVolumes.gameOver);
+    }
+
+    playCrash() {
+        // Play crash sound immediately (not looped)
+        this.crashAudio.currentTime = 0; // Reset to beginning
+        this.crashAudio.play().catch(err => {
+            console.warn("Crash audio playback failed:", err);
+        });
     }
 
     playAchieved() {
