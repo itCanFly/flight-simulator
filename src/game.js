@@ -96,7 +96,7 @@ export class Game {
 
         // Ground model 
         this.ground = null;
-        this._loadGroundModel();
+        // this._loadGroundModel();
 
         this.camera = new THREE.PerspectiveCamera(100,window.innerWidth / window.innerHeight,0.1,3000);
 
@@ -160,7 +160,7 @@ export class Game {
     // Create arrows between waypoints
     _createArrows() {
         // Clear existing arrows
-        this.arrows.forEach(arrow => this.scene.remove(arrow));
+        // this.arrows.forEach(arrow => this.scene.remove(arrow));
         this.arrows = [];
 
         // Create arrows between consecutive waypoints
@@ -377,9 +377,9 @@ lose() {
 
         if (this.keys.ArrowUp) {
             this.verticalVelocity += this.liftStrength;
-            if(this.plane.rotation.x>-0.3){
-                this.plane.rotation.x -= 0.0003;
-            }
+            // if(this.plane.rotation.x>-0.3){
+            //     this.plane.rotation.x -= 0.0003;
+            // }
         }
         this.verticalVelocity += this.gravity;
 
@@ -417,12 +417,12 @@ lose() {
         else if (this.plane.rotation.z>0){
             this.plane.rotation.z-=0.0015;
         }
-        if(this.plane.rotation.x<0){
-            this.plane.rotation.x+=0.0015;
-        }
-        else if(this.plane.rotation.x>0){
-            this.plane.rotation.x-=0.0015;
-        }
+        // if(this.plane.rotation.x<0){
+        //     this.plane.rotation.x+=0.0015;
+        // }
+        // else if(this.plane.rotation.x>0){
+        //     this.plane.rotation.x-=0.0015;
+        // }
 
         // Update movement audio based on plane motion
         this.music.updateMovementAudio(isMoving);
