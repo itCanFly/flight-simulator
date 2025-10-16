@@ -1,3 +1,4 @@
+
 export function startStatsLoop(stats,statsInterval, notify, gameOver) {
   stopStatsLoop(statsInterval); // stop previous interval if running
 
