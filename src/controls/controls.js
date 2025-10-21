@@ -4,6 +4,7 @@ import { checkGroundCollision } from "../systems/safety";
 export function setupControls(game) {
     game.keys = {
             ArrowUp: false,
+            ArrowDown: false,
             ArrowLeft: false,
             ArrowRight: false,
             KeyW: false,
