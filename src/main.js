@@ -96,7 +96,7 @@ selectLevel.forEach(card => {
     card.addEventListener('click', () => {
 
         myGame.music.playButton();
-        start(myGame);
+        
 
         const level = card.dataset.level;
         document.getElementById('levelInfo').textContent = `Level: ${level}`;
@@ -107,7 +107,9 @@ selectLevel.forEach(card => {
         startCountdown(() => {
             start(myGame);
         });
+        start(myGame);
     });
+
 });
 
 // -----------------
@@ -196,6 +198,8 @@ restartButton.addEventListener('click', () => {
     startCountdown(() => {
         start(myGame);
     });
+    start(myGame);
+
 });
 
 nextLevelButton.addEventListener('click', () => {
@@ -206,6 +210,7 @@ nextLevelButton.addEventListener('click', () => {
     startCountdown(() => {
         start(myGame);
     });
+    start(myGame);
 });
 
 // -----------------
@@ -237,6 +242,7 @@ restartPauseButton.addEventListener('click', () => {
     startCountdown(() => {
         start(myGame); // Restart the current level
     });
+  start(myGame); 
 });
 
 quitPauseButton.addEventListener('click', () => {
@@ -301,9 +307,9 @@ nextWinLevelButton.addEventListener('click', () => {
 restartWinButton.addEventListener('click', () => {
     myGame.music.playButton();
     winPopup.style.display = 'none';
-    startCountdown(() => {
-        start(myGame);
-    });
+    // startCountdown(() => {
+    //     start(myGame);
+    // });
 });
 
 quitWinButton.addEventListener('click', () => {
@@ -317,9 +323,9 @@ quitWinButton.addEventListener('click', () => {
 restartLoseButton.addEventListener('click', () => {
     myGame.music.playButton();
     losePopup.style.display = 'none';
-    startCountdown(() => {
-        start(myGame);
-    });
+    // startCountdown(() => {
+    //     start(myGame);
+    // });
 });
 
 quitLoseButton.addEventListener('click', () => {

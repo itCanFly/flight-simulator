@@ -21,9 +21,9 @@ export class Game {
         this.verticalVelocity = 0;
         this.gravity = -0.005;
         this.liftStrength = 0.007;
-        this.forwardSpeed = 0.5;
+        this.forwardSpeed = 0.9;
         
-        this.minForwardSpeed = 0.1;
+        this.minForwardSpeed = 0.6;
         this.speedAcceleration = 0.005;
 
         this.currentWaypointIndex = 0;
