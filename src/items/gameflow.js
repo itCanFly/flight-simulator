@@ -86,7 +86,9 @@ export function resume(game) {
 export function changeState(game) {
     if (game.state === 'PLAYING') {
         game.state = 'PAUSED';
+        pausePopup.style.display = 'flex';
         game.isAnimating = false;
+        console.log(game.isAnimating);
         stopStats(game);
         game.music.stopMovementAudio();
 

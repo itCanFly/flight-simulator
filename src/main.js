@@ -18,6 +18,7 @@ const progressFill = document.querySelector('.progress-fill');
 // Countdown Animation Function
 // -----------------
 function startCountdown(callback) {
+    
     const overlay = document.getElementById('countdownOverlay');
     const numberEl = document.getElementById('countdownNumber');
     const sequence = ['3', '2', '1', 'GO!'];
@@ -28,7 +29,11 @@ function startCountdown(callback) {
     function showNext() {
         if (index >= sequence.length) {
             overlay.classList.remove('active');
-            if (callback) callback();
+       
+            if (callback) {
+               
+                callback();
+            }
             return;
         }
 
@@ -97,14 +102,15 @@ selectLevel.forEach(card => {
 
         myGame.music.playButton();
         
-
+        
         const level = card.dataset.level;
         document.getElementById('levelInfo').textContent = `Level: ${level}`;
         levelSelection.style.display = 'none';
         gameScreen.style.display = 'block';
-        
+        myGame.isAnimating = false;
         // Start countdown
         startCountdown(() => {
+            
             start(myGame);
         });
         start(myGame);
@@ -132,6 +138,7 @@ myGame.onChange(game => updateStats(game));
 document.body.addEventListener('keydown', (e) => {
     if (e.code === "Space") {  
         if (myGame.state === 'PLAYING' || myGame.state === 'PAUSED') {
+            
             changeState(myGame);
         }
     }
@@ -225,7 +232,7 @@ resumeButton.addEventListener('click', () => {
 
     myGame.music.playButton();
     // Hide exit popup
-    document.getElementById('exit').style.display = 'none';
+    pausePopup.style.display = 'flex';
     myGame.isAnimating = false;
     stopStats(myGame);
     resetPosition(myGame);
