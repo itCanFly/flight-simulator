@@ -18,13 +18,21 @@ export class Game {
         this.score = 0;
         this.listeners = [];
 
+        this.lastScoreTime = 0;   // Time when last points were given
+        this.scoreInterval = 10;  // seconds
+
         this.verticalVelocity = 0;
         this.gravity = -0.005;
         this.liftStrength = 0.007;
         this.forwardSpeed = 0.9;
         
+
         this.minForwardSpeed = 0.6;
         this.speedAcceleration = 0.005;
+        this.targetForwardSpeed = 1.5;
+        // this.minForwardSpeed = 0.1;
+        // this.speedAcceleration = 0.02;
+
 
         this.currentWaypointIndex = 0;
 
@@ -67,6 +75,8 @@ export class Game {
             ArrowUp: false,
             ArrowLeft: false,
             ArrowRight: false,
+            KeyW: false,
+            KeyS: false,
         };
 
         // Clock for delta time

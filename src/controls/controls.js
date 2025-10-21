@@ -2,7 +2,13 @@ import { checkWaypointReached } from "../scene/waypoints";
 import { checkGroundCollision } from "../systems/safety";
 
 export function setupControls(game) {
-    game.keys = { ArrowUp: false, ArrowLeft: false, ArrowRight: false };
+    game.keys = {
+            ArrowUp: false,
+            ArrowLeft: false,
+            ArrowRight: false,
+            KeyW: false,
+            KeyS: false,
+        };
     game.cameraMode = "thirdPerson";
 
     window.addEventListener("keydown", (e) => {
@@ -28,6 +34,14 @@ export function updateControls(game) {
 
     const isMoving = keys.ArrowUp || keys.ArrowLeft || keys.ArrowRight || game.forwardSpeed > 0;
 
+    const maxSpeed = 3.0;
+    if (keys.KeyW) {
+        game.targetForwardSpeed = Math.min(game.targetForwardSpeed + 0.02, maxSpeed);
+    }
+    if (keys.KeyS) {
+        game.targetForwardSpeed = Math.max(game.targetForwardSpeed - 0.02, game.minForwardSpeed);
+    }
+
     if (keys.ArrowUp) game.verticalVelocity += game.liftStrength;
     
     if (keys.ArrowLeft) {
@@ -47,6 +61,10 @@ export function updateControls(game) {
         if (game.forwardSpeed > game.targetForwardSpeed) {
             game.forwardSpeed = game.targetForwardSpeed;
         }
+    } else if (game.forwardSpeed > game.targetForwardSpeed) {
+        game.forwardSpeed -= game.speedAcceleration;
+        if (game.forwardSpeed < game.targetForwardSpeed)
+            game.forwardSpeed = game.targetForwardSpeed;
     }
     game.verticalVelocity += game.gravity;
     game.plane.position.y += game.verticalVelocity;
