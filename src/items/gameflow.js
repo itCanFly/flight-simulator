@@ -1,4 +1,5 @@
 import { spawnFuelCans } from '../items/fuelSystem.js';
+import { spawnExhausts } from '../items/exhaustSystem.js';
 import { createRotatingCircle, createArrows } from '../scene/waypoints.js';
 import { handleAltitude, handleFuelWarning, handleGroundCollision,hideAltitudeWarning } from '../systems/safety.js';
 import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from '../scene/stats.js';
@@ -40,6 +41,7 @@ export function start(game) {
     game.arrows = createArrows(game.scene, game.waypoints);
 
     spawnFuelCans(game);
+    spawnExhausts(game);
 
     resetPosition(game);
     resetStats(game);
@@ -138,6 +140,8 @@ export function  animate(game) {
         // Update moving clouds with fade animations
         updateClouds(game.cloudGroup, game.plane, game.camera, deltaTime);
 
+        if (game.updateExhausts) game.updateExhausts();
+        
         // Rotate the circle
         if (game.rotatingCircle) {
             game.rotatingCircle.rotation.z += 0.02;
