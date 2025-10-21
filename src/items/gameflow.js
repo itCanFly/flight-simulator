@@ -164,4 +164,21 @@ export function  animate(game) {
         game.camera.lookAt(game.plane.position);
         // shakeCamera(this.camera,0.25);
         game.renderer.render(game.scene, game.camera);
+
+        if (game.state === "PLAYING") {
+            const currentTime = game.clock.getElapsedTime();
+            
+            // Give 100 points every 10 seconds
+            if (currentTime - game.lastScoreTime >= game.scoreInterval) {
+                game.score += 100;
+                game.lastScoreTime = currentTime;
+                console.log("🪙 +100 points | Total Score:", game.score);
+            }
+        }
+
+        document.getElementById("finalScore").innerText = `Score: ${game.score}`;
+        // document.getElementById("timeValue").innerText = `${this.currentTime}`;
+        document.getElementById("speedValue").innerText = `${(game.forwardSpeed.toFixed(3)*100).toFixed(0)} km/h`;
+
+
     }
