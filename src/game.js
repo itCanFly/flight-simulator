@@ -69,6 +69,7 @@ export class Game {
         // Control keys
         this.keys = {
             ArrowUp: false,
+            ArrowDown: false,
             ArrowLeft: false,
             ArrowRight: false,
             KeyW: false,

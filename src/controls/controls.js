@@ -4,6 +4,7 @@ import { checkGroundCollision } from "../systems/safety";
 export function setupControls(game) {
     game.keys = {
             ArrowUp: false,
+            ArrowDown: false,
             ArrowLeft: false,
             ArrowRight: false,
             KeyW: false,
@@ -43,7 +44,10 @@ export function updateControls(game) {
     }
 
     if (keys.ArrowUp) game.verticalVelocity += game.liftStrength;
-    
+
+    if (keys.ArrowDown){
+        game.verticalVelocity+=0.75*game.gravity;
+    }
     if (keys.ArrowLeft) {
         game.plane.rotation.y += 0.009;
         if(game.plane.rotation.z>-0.12){

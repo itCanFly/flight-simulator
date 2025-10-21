@@ -11,7 +11,7 @@ function notify(game) {
     }
 
 export function startStats(game) {
-    startStatsLoop(game.stats, game.statsInterval, () => notify(game),() => game.gameOver() );
+    startStatsLoop(game.stats, game.statsInterval, () => notify(game),() => gameOver(game) );
 }
 
 export function stopStats(game) {
@@ -176,12 +176,13 @@ export function  animate(game) {
             if (currentTime - game.lastScoreTime >= game.scoreInterval) {
                 game.score += 100;
                 game.lastScoreTime = currentTime;
-                console.log("🪙 +100 points | Total Score:", game.score);
+                //console.log("🪙 +100 points | Total Score:", game.score);
             }
         }
 
         document.getElementById("finalScore").innerText = `Score: ${game.score}`;
-        // document.getElementById("timeValue").innerText = `${this.currentTime}`;
+        document.getElementById("gameScore").innerText = `${game.score}`;
+        //document.getElementById("timeValue").innerText = `${this.currentTime}`;
         document.getElementById("speedValue").innerText = `${(game.forwardSpeed.toFixed(3)*100).toFixed(0)} km/h`;
 
 
