@@ -6,12 +6,29 @@ import { stopStats } from './items/gameflow.js';
 // -----------------
 
 const myGame = new Game("gameScreen");
-
+console.log("what now?");
 // Screen elements
-const loadingScreen = document.getElementById('loadingScreen');
-const mainMenu = document.getElementById('mainMenu');
+// const loadingScreen = document.getElementById('loadingScreen');
+// const mainMenu = document.getElementById('mainMenu');
 const levelSelection = document.getElementById('levelSelection');
 const gameScreen = document.getElementById('gameScreen');
+
+myGame.music.playButton();
+
+
+// const level = card.dataset.level;
+// document.getElementById('levelInfo').textContent = `Level: ${level}`;
+// levelSelection.style.display = 'none';
+gameScreen.style.display = 'block';
+myGame.isAnimating = false;
+
+// Start countdown
+startCountdown(() => {
+    
+    start(myGame);
+});
+start(myGame);
+
 const progressFill = document.querySelector('.progress-fill');
 
 // -----------------
@@ -58,65 +75,15 @@ function startCountdown(callback) {
     showNext();
 }
 
-// -----------------
-// Loading Simulation
-// -----------------
-let progress = 0;
-const loadInterval = setInterval(() => {
-    progress += 2;
-    progressFill.style.width = progress + '%';
-    if (progress >= 100) {
-        clearInterval(loadInterval);
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-            mainMenu.style.display = 'flex';
-        }, 500);
-    }
-}, 95);
+
 
 // -----------------
 // Navigation Buttons
-// -----------------
-const playButton = document.getElementById('playButton');
-const backToMenu = document.getElementById('backToMenuButton');
+// // -----------------
+// const playButton = document.getElementById('playButton');
+// const backToMenu = document.getElementById('backToMenuButton');
 const backToLevel = document.getElementById('backToLevelsButton');
 
-playButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    // mainMenu.style.display = 'none';
-    window.location.href = "/menu.html";
-});
-
-backToMenu.addEventListener('click', () => {
-    myGame.music.playButton();
-    levelSelection.style.display = 'none';
-    // mainMenu.style.display = 'flex';
-});
-
-// -----------------
-// Level Selection
-// -----------------
-const selectLevel = document.querySelectorAll('.level-card');
-selectLevel.forEach(card => {
-    card.addEventListener('click', () => {
-
-        myGame.music.playButton();
-        
-        
-        const level = card.dataset.level;
-        document.getElementById('levelInfo').textContent = `Level: ${level}`;
-        levelSelection.style.display = 'none';
-        gameScreen.style.display = 'block';
-        myGame.isAnimating = false;
-        // Start countdown
-        startCountdown(() => {
-            
-            start(myGame);
-        });
-        start(myGame);
-    });
-
-});
 
 // -----------------
 // Stats Display
@@ -179,12 +146,12 @@ myGame.onChange(game => {
 // -----------------
 // Button Handlers
 // -----------------
-// backToLevel.addEventListener('click', () => {
-//     myGame.music.playButton();
-//     // Show pause popup instead of directly going to levels
-//     changeState(myGame); // Pause the game
-//     document.getElementById('pausePopup').style.display = 'flex';
-// });
+backToLevel.addEventListener('click', () => {
+    myGame.music.playButton();
+    // Show pause popup instead of directly going to levels
+    changeState(myGame); // Pause the game
+    document.getElementById('pausePopup').style.display = 'flex';
+});
 
 quitButton.addEventListener('click', () => {
     myGame.music.playButton();
@@ -196,7 +163,8 @@ quitButton.addEventListener('click', () => {
     resetPosition(myGame);
     myGame.state = 'MENU';
     // Go to levels instead of main menu
-    levelSelection.style.display = 'flex';
+    localStorage.setItem('showLevelSelection', 'true');
+    window.location.href = '/menu.html';
 });
 
 restartButton.addEventListener('click', () => {
@@ -232,13 +200,10 @@ resumeButton.addEventListener('click', () => {
 
     myGame.music.playButton();
     // Hide exit popup
-    pausePopup.style.display = 'flex';
-    myGame.isAnimating = false;
+    myGame.isAnimating = true;
     stopStats(myGame);
-    resetPosition(myGame);
-    myGame.state = 'MENU';
-    document.getElementById('gameScreen').style.display = 'none';
-    levelSelection.style.display = 'flex';
+    // resetPosition(myGame);
+
     pausePopup.style.display = 'none';
     resume(myGame);
 });
@@ -254,15 +219,16 @@ restartPauseButton.addEventListener('click', () => {
 
 quitPauseButton.addEventListener('click', () => {
     myGame.music.playButton();
-    pausePopup.style.display = 'none';
+    gameOverPopup.style.display = 'none';
     gameScreen.style.display = 'none';
-    // Reset game state
+    // Reset game state properly without calling gameOver() again
     myGame.isAnimating = false;
     stopStats(myGame);
     resetPosition(myGame);
     myGame.state = 'MENU';
-    // Go to level selection
-    levelSelection.style.display = 'flex';
+    // Go to levels instead of main menu
+    localStorage.setItem('showLevelSelection', 'true');
+    window.location.href = '/menu.html';
 });
 
 // Removed exit popup - using only Game Over popup now
@@ -292,13 +258,6 @@ function showLosePopup() {
 }
 
 // Hook into game states
-
-
-
-
-
-
-
 myGame.onChange((game) => {
     if (game.state === 'WIN') {
         showWinPopup();
@@ -321,9 +280,7 @@ nextWinLevelButton.addEventListener('click', () => {
 restartWinButton.addEventListener('click', () => {
     myGame.music.playButton();
     winPopup.style.display = 'none';
-    // startCountdown(() => {
-    //     start(myGame);
-    // });
+
 });
 
 quitWinButton.addEventListener('click', () => {

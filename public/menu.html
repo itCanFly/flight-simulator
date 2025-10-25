@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Menu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .sign-container {
+            position: relative;
+            perspective: 1500px;
+        }
+
+        .sign-board {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 30px;
+            padding: 3rem 4rem;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+            min-width: 400px;
+        }
+
+        .sign-board::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .sign-header {
+            position: relative;
+            text-align: center;
+            margin-bottom: 3rem;
+            z-index: 1;
+        }
+
+        .sign-title {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 
+                0 0 20px rgba(59, 130, 246, 0.6),
+                0 0 40px rgba(59, 130, 246, 0.4);
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+
+        .sign-subtitle {
+            font-size: 1rem;
+            color: #94a3b8;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .options-list {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .option-button {
+            position: relative;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 15px;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .option-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .option-button:hover::before {
+            left: 100%;
+        }
+
+        .option-button:hover {
+            transform: translateX(10px) scale(1.05);
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(99, 102, 241, 0.3) 100%);
+            box-shadow: 
+                0 10px 30px rgba(59, 130, 246, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .option-button:active {
+            transform: translateX(10px) scale(0.98);
+        }
+
+        .option-icon {
+            display: inline-block;
+            margin-right: 1rem;
+            font-size: 1.8rem;
+            vertical-align: middle;
+        }
+
+        /* Glowing corners */
+        .corner-glow {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .corner-glow.top-left {
+            top: -50px;
+            left: -50px;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .corner-glow.bottom-right {
+            bottom: -50px;
+            right: -50px;
+            animation: pulse 3s ease-in-out infinite 1.5s;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.6;
+            }
+        }
+
+        /* Selected state */
+        .option-button.selected {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(16, 185, 129, 0.3) 100%);
+            border-color: #22c55e;
+            box-shadow: 
+                0 10px 30px rgba(34, 197, 94, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* Level Selection */
+        /* Modal backdrop */
+        #levelSelection {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            z-index: 80;
+
+            /* Center children (the modal box) */
+            justify-content: center;
+            align-items: center;
+
+            /* Dark overlay + blur */
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+        }
+
+        .levels-title {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .levels-container {
+            background: rgba(30, 41, 59, 0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .level-card {
+            width: 280px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem 2rem;
+            border: 2px solid rgba(51, 65, 85, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .level-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-5px);
+        }
+        .level-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.2rem;
+            background: rgba(51, 65, 85, 0.8);
+            color: white;
+            border: 2px solid rgba(71, 85, 105, 0.8);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .back-button:hover {
+            background: rgba(71, 85, 105, 0.9);
+            transform: translateX(-5px);
+        }
+                .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .settings-container {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 30px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .settings-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .settings-container::-webkit-scrollbar-track {
+            background: rgba(51, 65, 85, 0.3);
+            border-radius: 5px;
+        }
+
+        .settings-container::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.5);
+            border-radius: 5px;
+        }
+
+        .settings-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.7);
+        }
+
+        .settings-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .settings-title {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+            margin-bottom: 0.5rem;
+        }
+
+        .settings-subtitle {
+            font-size: 1rem;
+            color: #94a3b8;
+            letter-spacing: 2px;
+        }
+
+        .settings-section {
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            color: #60a5fa;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .setting-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-value {
+            color: #60a5fa;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        /* Slider Styles */
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(71, 85, 105, 0.5);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+        }
+
+        /* Checkbox Styles */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .checkbox-container:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .checkbox {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            background: rgba(71, 85, 105, 0.5);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox.checked {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .checkbox-label {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(71, 85, 105, 0.5);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .toggle-switch.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(71, 85, 105, 0.3);
+            color: #cbd5e1;
+            border-color: rgba(71, 85, 105, 0.5);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(71, 85, 105, 0.5);
+            border-color: #64748b;
+            transform: translateY(-3px);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+            transform: translateY(-3px);
+        }
+
+        .success-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(34, 197, 94, 0.95);
+            color: white;
+            padding: 1.5rem 3rem;
+            border-radius: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 10px 40px rgba(34, 197, 94, 0.5);
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+    </style>
+</head>
+<body class="body" id="body">
+    <div class="particles" id="particles"></div>
+    
+    <div class="sign-container" id="sign-container">
+        <div class="sign-board">
+            <div class="corner-glow top-left"></div>
+            <div class="corner-glow bottom-right"></div>
+            
+            <div class="sign-header">
+                <div class="sign-title">MENU</div>
+                <div class="sign-subtitle">Choose Your Path</div>
+            </div>
+            
+            <div class="options-list">
+                <button class="option-button" data-option="settings" id="settings">
+                    <span class="option-icon">⚙️</span>
+                    <span>Settings</span>
+                </button>
+                
+                <button class="option-button" data-option="play">
+                    <span class="option-icon">▶️</span>
+                    <span>Play</span>
+                </button>
+                
+                <button class="option-button" data-option="gameplay">
+                    <span class="option-icon">🎮</span>
+                    <span>Gameplay</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="levelSelection">
+        <div class="levels-container">
+            <button class="back-button" id="backToMenuButton">← Back</button>
+            <div class="levels-title">Select Level</div>
+            <div class="level-card" data-level="1">
+                <div class="level-name">Level 1</div>
+            </div>
+            <div class="level-card" data-level="2">
+                <div class="level-name">Level 2</div>
+            </div>
+            <div class="level-card" data-level="3">
+                <div class="level-name">Level 3</div>
+            </div>
+        </div>
+    </div>
+    <div class="settings-container">
+        <button class="back-button" id="backToMenuButton1">← Back</button>
+        <div class="settings-header">
+            <div class="settings-title">⚙️ Settings</div>
+            <div class="settings-subtitle">Customize Your Experience</div>
+        </div>
+
+        <!-- Audio Settings -->
+        <div class="settings-section">
+            <div class="section-title">🔊 Audio Settings</div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>Master Volume</span>
+                    <span class="setting-value" id="masterVolumeValue">100%</span>
+                </div>
+                <input type="range" min="0" max="100" value="100" class="slider" id="masterVolume">
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>Music Volume</span>
+                    <span class="setting-value" id="musicVolumeValue">80%</span>
+                </div>
+                <input type="range" min="0" max="100" value="80" class="slider" id="musicVolume">
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>Sound Effects Volume</span>
+                    <span class="setting-value" id="sfxVolumeValue">90%</span>
+                </div>
+                <input type="range" min="0" max="100" value="90" class="slider" id="sfxVolume">
+            </div>
+
+            <div class="setting-item">
+                <div class="checkbox-container" onclick="toggleCheckbox('muteAll')">
+                    <div class="checkbox" id="muteAll"></div>
+                    <span class="checkbox-label">Mute All Sounds</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>Background Music</span>
+                </div>
+                <div class="toggle-container">
+                    <div class="toggle-switch active" id="bgMusicToggle" onclick="toggleSwitch('bgMusicToggle')">
+                        <div class="toggle-slider"></div>
+                    </div>
+                    <span style="color: #cbd5e1;" id="bgMusicStatus">On</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+            <button class="btn btn-secondary" onclick="resetToDefaults()">🔄 Reset to Defaults</button>
+        </div>
+
+        <div class="button-group" style="margin-top: 1rem;">
+            <button class="btn btn-danger" onclick="clearSavedData()">🗑️ Clear Saved Data</button>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('showLevelSelection') === 'true') {
+                const levelSelection = document.getElementById('levelSelection');
+                if (levelSelection) {
+                levelSelection.style.display = 'flex';
+                }
+                localStorage.removeItem('showLevelSelection');
+            }
+            });
+            
+        // Create animated particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        const buttons = document.querySelectorAll('.option-button');
+        const settingsContainer = document.querySelector('.settings-container');
+        const signContainer = document.getElementById('sign-container');
+        const levelSelection = document.getElementById('levelSelection');
+
+        buttons.forEach(button => {
+            button.addEventListener('click', function () {
+                buttons.forEach(btn => btn.classList.remove('selected'));
+                this.classList.add('selected');
+
+                const option = this.getAttribute('data-option');
+                console.log('Selected option:', option);
+
+                // SETTINGS
+                if (option === 'settings') {
+                    signContainer.style.display = 'none';
+                    settingsContainer.style.display = 'block';
+                }
+
+                // PLAY
+                else if (option === 'play') {
+                    signContainer.style.display = 'none';
+                    levelSelection.style.display = 'flex';
+                }
+
+                // GAMEPLAY
+                else if (option === 'gameplay') {
+                    window.location.href = '/gameplay.html';
+                }
+            });
+        });
+
+        document.getElementById('backToMenuButton1').addEventListener('click', () => {
+            settingsContainer.style.display = 'none';
+            signContainer.style.display = 'block';
+        });
+       
+        document.getElementById('backToMenuButton').addEventListener('click', () => {
+            levelSelection.style.display = 'none';
+            signContainer.style.display = 'block';
+        });
+        
+        document.querySelectorAll('.level-card').forEach(card => {
+            card.addEventListener('click', () => {
+                window.location.href = '/gameplay.html';
+            });
+        });
+    </script>
+</body>
+</html>

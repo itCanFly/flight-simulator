@@ -88,12 +88,13 @@ export function changeState(game) {
         game.state = 'PAUSED';
         pausePopup.style.display = 'flex';
         game.isAnimating = false;
-        console.log(game.isAnimating);
+        // animate(game);
         stopStats(game);
         game.music.stopMovementAudio();
 
     } else if (game.state === 'PAUSED') {
         game.state = 'PLAYING';
+        pausePopup.style.display = 'none';
         game.isAnimating = true;
         animate(game);
         startStats(game);
@@ -120,6 +121,8 @@ export function resetPosition(game) {
 }
 
 export function  animate(game) {
+        console.log(game.isAnimating)
+        console.log(game.state);
         if (!game.isAnimating) return;
         requestAnimationFrame(() => animate(game));
 
