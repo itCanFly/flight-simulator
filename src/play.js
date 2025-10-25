@@ -8,17 +8,12 @@ import { stopStats } from './items/gameflow.js';
 const myGame = new Game("gameScreen");
 console.log("what now?");
 // Screen elements
-// const loadingScreen = document.getElementById('loadingScreen');
-// const mainMenu = document.getElementById('mainMenu');
+
 const levelSelection = document.getElementById('levelSelection');
 const gameScreen = document.getElementById('gameScreen');
 
 myGame.music.playButton();
 
-
-// const level = card.dataset.level;
-// document.getElementById('levelInfo').textContent = `Level: ${level}`;
-// levelSelection.style.display = 'none';
 gameScreen.style.display = 'block';
 myGame.isAnimating = false;
 
@@ -80,8 +75,7 @@ function startCountdown(callback) {
 // -----------------
 // Navigation Buttons
 // // -----------------
-// const playButton = document.getElementById('playButton');
-// const backToMenu = document.getElementById('backToMenuButton');
+
 const backToLevel = document.getElementById('backToLevelsButton');
 
 

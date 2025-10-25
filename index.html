@@ -10,10 +10,7 @@
     <div id="app"></div>
      <div id="gameContainer">
         <!-- Countdown Overlay -->
-        <div id="countdownOverlay">
-            <div class="countdown-number" id="countdownNumber"></div>
-        </div>
-        
+
         <!-- Loading Screen -->
         <div id="loadingScreen">
             <div class="loading-text">Loading</div>
@@ -28,105 +25,8 @@
             <button class="play-button" id="playButton">MENU</button>
         </div>
 
-        <!-- Level Selection -->
-        <div id="levelSelection">
-            <div class="levels-container">
-                <button class="back-button" id="backToMenuButton">← Back</button>
-                <div class="levels-title">Select Level</div>
-                <div class="level-card" data-level="1">
-                    <div class="level-name">Level 1</div>
-                </div>
-                <div class="level-card" data-level="2">
-                    <div class="level-name">Level 2</div>
-                </div>
-                <div class="level-card" data-level="3">
-                    <div class="level-name">Level 3</div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Game Screen -->
-        <div id="gameScreen">
-            <button class="back-button" id="backToLevelsButton">← Levels</button>
-            <div class="game-info">
-                <div id="levelInfo">Level: 1</div>
-                <div class="stat-row">
-                    <span class="stat-label">Speed:</span>
-                    <span class="stat-value speed-value" id="speedValue">0 km/h</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Fuel:</span>
-                    <span class="stat-value fuel-value" id="fuelValue">100%</span>
-                </div>
-                <div class="fuel-bar-container">
-                    <div class="fuel-bar-fill" id="fuelBar"></div>
-                </div>
-                <div class="stat-row" style="margin-top: 1rem;">
-                    <span class="stat-label">Score:</span>
-                    <span class="stat-value" id="gameScore">0</span>
-                </div>
-                <div class="stat-row" style="margin-top: 1rem;">
-                    <span class="stat-label">Time:</span>
-                    <span class="stat-value" id="timeValue">0:00</span>
-                </div>
-            </div>
-            
-            <!-- Altitude Warning Display -->
-            <div id="altitudeWarning" class="altitude-warning hidden">
-                <div class="warning-text">⚠️ ALTITUDE WARNING ⚠️</div>
-                <div class="warning-subtitle">DESCEND IMMEDIATELY</div>
-            </div>
-        </div>
-        <!-- Game Over Popup -->
-        <div id="gameOverPopup" class="popup">
-            <div class="popup-content">
-                <h2>Game Over</h2>
-                <p id="finalScore">Score: 0</p>
-                <div class="popup-buttons">
-                    <button id="quitButton">Quit</button>
-                    <button id="restartButton">Restart</button>
-                    <button id="nextLevelButton">Next Level</button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Pause Popup -->
-        <div id="pausePopup" class="popup">
-            <div class="popup-content">
-                <h2>Game Paused</h2>
-                <div class="popup-buttons">
-                    <button id="resumeButton">Resume</button>
-                    <button id="restartPauseButton">Restart</button>
-                    <button id="quitPauseButton">Quit </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Win Popup -->
-        <div id="winPopup" class="popup">
-        <div class="popup-content">
-            <h2> You Win!</h2>
-            <p id="winMessage">Congratulations! Level Complete!</p>
-            <div class="popup-buttons">
-            <button id="nextWinLevelButton">Next Level</button>
-            <button id="restartWinButton">Restart</button>
-            <button id="quitWinButton">Quit</button>
-            </div>
-        </div>
-        </div>
-
-        <!-- Lose Popup -->
-        <div id="losePopup" class="popup">
-        <div class="popup-content">
-            <h2>💀 You Lose!</h2>
-            <p id="loseMessage">Try again to beat this level!</p>
-            <div class="popup-buttons">
-            <button id="restartLoseButton">Restart</button>
-            <button id="quitLoseButton">Quit</button>
-            </div>
-        </div>
-
-        </div>
     </div>
     <script type="module" src="./src/main.js"></script>
   </body>
