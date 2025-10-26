@@ -60,6 +60,7 @@
         .sign-container {
             position: relative;
             perspective: 1500px;
+             z-index: 112;
         }
 
         .sign-board {
@@ -641,6 +642,148 @@
                 transform: translate(-50%, -50%);
             }
         }
+
+               .controls-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .controls-container {
+            background: rgba(30, 41, 59, 0.9);
+            padding: 2rem 2.5rem;
+            border-radius: 20px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 700px;
+            width: 90%;
+            position: relative;
+            z-index: 2;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .controls-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .controls-container::-webkit-scrollbar-track {
+            background: rgba(51, 65, 85, 0.3);
+            border-radius: 5px;
+        }
+
+        .controls-container::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.5);
+            border-radius: 5px;
+        }
+
+        .controls-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.7);
+        }
+
+        .controls-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #93c5fd;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 20px rgba(147, 197, 253, 0.5);
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.2rem;
+            margin-bottom: 0.7rem;
+            background: rgba(51, 65, 85, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .control-item:hover {
+            background: rgba(71, 85, 105, 0.7);
+            transform: translateX(10px);
+            border-color: rgba(59, 130, 246, 0.6);
+        }
+
+        .key-display {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .key-box {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-width: 110px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            border: 2px solid rgba(147, 197, 253, 0.3);
+        }
+
+        .key-arrow {
+            font-size: 1.5rem;
+            color: #cbd5e1;
+        }
+
+        .key-description {
+            color: #e2e8f0;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .controls-footer {
+            margin-top: 1.2rem;
+            padding-top: 1.2rem;
+            border-top: 2px solid rgba(71, 85, 105, 0.5);
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .controls-container {
+                padding: 2rem 1.5rem;
+            }
+
+            .controls-title {
+                font-size: 2rem;
+            }
+
+            .control-item {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .key-display {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .key-box {
+                width: 100%;
+            }
+
+            .key-arrow {
+                transform: rotate(90deg);
+            }
+        }
     </style>
 </head>
 <body class="body" id="body">
@@ -689,6 +832,7 @@
             </div>
         </div>
     </div>
+
     <div class="settings-container">
         <button class="back-button" id="backToMenuButton1">← Back</button>
         <div class="settings-header">
@@ -754,12 +898,73 @@
             <button class="btn btn-danger" onclick="clearSavedData()">🗑️ Clear Saved Data</button>
         </div>
     </div>
+
+    <div class="controls-page" id="controlsPage">
+        <button class="back-button" id="backFromControls">← Back</button>
+        
+        <div class="controls-container">
+            <h1 class="controls-title">GAME CONTROLS</h1>
+
+            <div class="control-item">
+                <div class="key-display">
+                    <div class="key-box">↑ Up Arrow</div>
+                    <span class="key-arrow">→</span>
+                </div>
+                <div class="key-description">To go Up</div>
+            </div>
+
+            <div class="control-item">
+                <div class="key-display">
+                    <div class="key-box">← → Arrows</div>
+                    <span class="key-arrow">→</span>
+                </div>
+                <div class="key-description">Turn sideways</div>
+            </div>
+
+            <div class="control-item">
+                <div class="key-display">
+                    <div class="key-box">W</div>
+                    <span class="key-arrow">→</span>
+                </div>
+                <div class="key-description">Increase speed</div>
+            </div>
+
+            <div class="control-item">
+                <div class="key-display">
+                    <div class="key-box">S</div>
+                    <span class="key-arrow">→</span>
+                </div>
+                <div class="key-description">Reduce speed</div>
+            </div>
+
+            <div class="control-item">
+                <div class="key-display">
+                    <div class="key-box">C</div>
+                    <span class="key-arrow">→</span>
+                </div>
+                <div class="key-description">Change View</div>
+            </div>
+
+            <div class="control-item">
+                <div class="key-display">
+                    <div class="key-box">Space</div>
+                    <span class="key-arrow">→</span>
+                </div>
+                <div class="key-description">Pause and resume game</div>
+            </div>
+
+            <div class="controls-footer">
+                Master these controls to become a skilled pilot!
+            </div>
+        </div>
+    </div>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('showLevelSelection') === 'true') {
                 const levelSelection = document.getElementById('levelSelection');
                 if (levelSelection) {
                 levelSelection.style.display = 'flex';
+                 signContainer.style.display = 'none';
                 }
                 localStorage.removeItem('showLevelSelection');
             }
@@ -802,8 +1007,10 @@
                 }
 
                 // GAMEPLAY
+                // GAMEPLAY (Show Controls)
                 else if (option === 'gameplay') {
-                    window.location.href = '/gameplay.html';
+                    signContainer.style.display = 'none';
+                    controlsPage.style.display = 'flex';
                 }
             });
         });
@@ -812,6 +1019,11 @@
             settingsContainer.style.display = 'none';
             signContainer.style.display = 'block';
         });
+        document.getElementById('backFromControls').addEventListener('click',()=>{
+            controlsPage.style.display = 'none';
+            signContainer.style.display = 'block';
+        })
+
        
         document.getElementById('backToMenuButton').addEventListener('click', () => {
             levelSelection.style.display = 'none';
