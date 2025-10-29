@@ -1,6 +1,6 @@
 // src/menuBackground.js
 import * as THREE from "three";
-import { createPlane } from "./src/plane.js";
+import { createPlane } from "./plane.js";
 // import { loadGround } from "./scene.js"; // whatever you need
 
 export function initMenuBackground() {

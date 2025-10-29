@@ -1,4 +1,7 @@
-    // Load Ground Model 
+    // Load Ground Model
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
 export function loadGroundModel(game){
         const loader = new GLTFLoader();
         loader.load(
