@@ -54,7 +54,17 @@ const dialogueText = document.getElementById('dialogueText');
 const characterName = document.getElementById('characterName');
 const characterAvatar = document.getElementById('characterAvatar');
 const nextButton = document.getElementById('nextButton');
+const skipButton = document.getElementById('skipButton');
 
+skipButton.addEventListener('click', () => {
+    // Hide the dialogue popup
+    document.getElementById('dialogue-popup').style.display = 'none';
+    
+    // Start the countdown and game
+    startCountdown(() => {
+        start(myGame);
+    });
+});
 window.addEventListener('load', () => {
     // Default to level 1 if no saved level is found
     if (myGame.level) {
