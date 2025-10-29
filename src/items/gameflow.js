@@ -90,6 +90,7 @@ export function changeState(game) {
         game.state = 'PAUSED';
         pausePopup.style.display = 'flex';
         game.isAnimating = false;
+        game.targetForwardSpeed = 0;
         // animate(game);
         stopStats(game);
         game.music.stopMovementAudio();
@@ -122,9 +123,10 @@ export function resetPosition(game) {
     game.hasPlayedAltitudeWarning = false;
 }
 
-export function  animate(game) {
-        console.log(game.isAnimating)
-        console.log(game.state);
+export function animate(game) {
+        // console.log(game.isAnimating)
+        // console.log(game.state);
+        // console.log(game.level);
         if (!game.isAnimating) return;
         requestAnimationFrame(() => animate(game));
 

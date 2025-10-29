@@ -817,6 +817,7 @@
             </div>
         </div>
     </div>
+    
     <div id="levelSelection">
         <div class="levels-container">
             <button class="back-button" id="backToMenuButton">← Back</button>
@@ -1030,11 +1031,18 @@
             signContainer.style.display = 'block';
         });
         
-        document.querySelectorAll('.level-card').forEach(card => {
-            card.addEventListener('click', () => {
-                window.location.href = '/gameplay.html';
-            });
+    document.querySelectorAll('.level-card').forEach(card => {
+        card.addEventListener('click', () => {
+            // Get the level number from the clicked card
+            const level = card.getAttribute('data-level');
+            
+            // Store the level number in localStorage
+            localStorage.setItem('selectedLevel', level);
+            
+            // Redirect to the gameplay page
+            window.location.href = '/gameplay.html';
         });
+    });
     </script>
 </body>
 </html>
