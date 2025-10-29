@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
        <link rel="stylesheet" href="./index.css">
     <title>flight-simulator</title>
-
-
-</head>
+  </head>
 <style>
 
 </style>
@@ -28,7 +26,7 @@
         <div id="gameScreen">
             <button class="back-button" id="backToLevelsButton">← Levels</button>
             <div class="game-info">
-                <div id="levelInfo">Level: 1</div>
+                <div id="levelInfo">Level:</div>
                 <div class="stat-row">
                     <span class="stat-label">Speed:</span>
                     <span class="stat-value speed-value" id="speedValue">0 km/h</span>
@@ -49,7 +47,21 @@
                     <span class="stat-value" id="timeValue">0:00</span>
                 </div>
             </div>
-            
+            <div class="dialogue-popup" id="dialogue-popup">
+                <div class="character-section">
+                    <div class="character-avatar" id="characterAvatar"></div>
+                    <div class="character-name" id="characterName">Mr Ingram</div>
+                </div>
+                <div class="dialogue-content">
+                    <div class="dialogue-text" id="dialogueText">
+                        Hello there! You must be Json right?
+                    </div>
+                 <div class="button-container">
+                    <button class="skip-button" id="skipButton">Skip</button>
+                    <button class="next-button" id="nextButton">Next</button>
+                </div>
+                </div>
+            </div>
             <!-- Altitude Warning Display -->
             <div id="altitudeWarning" class="altitude-warning hidden">
                 <div class="warning-text">⚠️ ALTITUDE WARNING ⚠️</div>
