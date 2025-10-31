@@ -64,13 +64,13 @@ const loadInterval = setInterval(() => {
         clearInterval(loadInterval);
         setTimeout(() => {
             loadingScreen.style.display = 'none';
-            mainMenu.style.display = 'flex';
+            window.location.href = "/menu.html";
         }, 500);
     }
 }, 95);
 
 
-const playButton = document.getElementById('playButton');
-playButton.addEventListener('click', () => {
-    window.location.href = "/menu.html";
-});
+// const playButton = document.getElementById('playButton');
+// playButton.addEventListener('click', () => {
+//     window.location.href = "/menu.html";
+// });

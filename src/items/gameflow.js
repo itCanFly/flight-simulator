@@ -6,6 +6,7 @@ import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from '../
 import { setupControls, updateControls } from '../controls/controls.js';
 import { updateClouds } from '../clouds/clouds.js';
 import { renderRadar } from '../scene/radarCamera.js'
+import { handleCheckpoints } from '../scene/checkpoints.js';
 
 function notify(game) {
         game.listeners.forEach(cb => cb(game));
@@ -143,7 +144,7 @@ export function animate(game) {
         handleAltitude(game);
         updateControls(game);
         handleGroundCollision(game);
-
+        handleCheckpoints(game);
 
         // Update moving clouds with fade animations
         updateClouds(game.cloudGroup, game.plane, game.camera, deltaTime);

@@ -19,7 +19,7 @@ export function spawnFuelCans(game) {
         pos.y += 10;
 
         const { group, update } = createFuelCan({
-            size: 15,
+            size: 40,
             onPickup: () => game.stats.fuel = Math.min(100, game.stats.fuel + 25)
         });
 

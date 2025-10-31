@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export function createRadarCamera() {
     
     const size = 100;
-    const aspect = 1.78; 
+    const aspect = 1.0; 
     const radarCamera = new THREE.OrthographicCamera(
         -size, size,
         size, -size,
@@ -23,7 +23,7 @@ export function renderRadar(game) {
 
     cam.position.set(
         game.plane.position.x,
-        game.plane.position.y + 10,
+        game.plane.position.y + 100,
         game.plane.position.z
     );
     cam.lookAt(game.plane.position);
