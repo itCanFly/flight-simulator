@@ -1,12 +1,13 @@
 // game.js
 import * as THREE from 'three';
 import { createPlane } from './plane.js';
-import { createClouds} from './clouds/clouds.js';
+//import { createClouds} from './clouds/clouds.js';
 import { getFormatted } from './scene/stats.js';
 import { setupScene, setupLighting, setupRenderer, setupCamera } from './scene/setup.js';
 import { createRotatingCircle, createArrows } from './scene/waypoints.js';
 import { Music } from './audio/Music.js';
 import { setupControls } from './controls/controls.js';
+import { createCheckpoints } from './scene/checkpoints.js';
 
 export class Game {
     constructor(containerId) {
@@ -94,6 +95,9 @@ export class Game {
         this.plane = createPlane();
         this.scene.add(this.plane);
 
+        this.checkpoints = createCheckpoints(this.level, this.scene);
+        this.currCheckpointIndex = 0;
+
         this.gridHelper = new THREE.GridHelper(3000, 500);
         this.scene.add(this.gridHelper);
 
@@ -104,12 +108,12 @@ export class Game {
         this.ground = null;
 
         // Clouds & Arrows
-        this.cloudGroup = createClouds(this.scene, this.sunLight);
+        //this.cloudGroup = createClouds(this.scene, this.sunLight);
 
 
         // Start with menu music
         this.music = new Music();
-        this.music.playMenu();
+        //this.music.playMenu();
 
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
