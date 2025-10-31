@@ -5,6 +5,7 @@ import { handleAltitude, handleFuelWarning, handleGroundCollision,hideAltitudeWa
 import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from '../scene/stats.js';
 import { setupControls, updateControls } from '../controls/controls.js';
 import { updateClouds } from '../clouds/clouds.js';
+import { renderRadar } from '../scene/radarCamera.js'
 
 function notify(game) {
         game.listeners.forEach(cb => cb(game));
@@ -174,7 +175,14 @@ export function animate(game) {
 
         game.camera.lookAt(game.plane.position);
         // shakeCamera(this.camera,0.25);
+
+        game.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+        game.renderer.setScissorTest(false);
+        game.renderer.setClearColor(0x87ceeb, 1); // sky color
+        game.renderer.clear(true, true, true);
+
         game.renderer.render(game.scene, game.camera);
+       renderRadar(game);
 
         if (game.state === "PLAYING") {
             const currentTime = game.clock.getElapsedTime();

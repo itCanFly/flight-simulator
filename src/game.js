@@ -7,6 +7,7 @@ import { setupScene, setupLighting, setupRenderer, setupCamera } from './scene/s
 import { createRotatingCircle, createArrows } from './scene/waypoints.js';
 import { Music } from './audio/Music.js';
 import { setupControls } from './controls/controls.js';
+import { createRadarCamera } from './scene/radarCamera.js';
 
 export class Game {
     constructor(containerId) {
@@ -93,6 +94,8 @@ export class Game {
         // Plane Setup
         this.plane = createPlane();
         this.scene.add(this.plane);
+
+        this.radarCamera = createRadarCamera();
 
         this.gridHelper = new THREE.GridHelper(3000, 500);
         this.scene.add(this.gridHelper);
