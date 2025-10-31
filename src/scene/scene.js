@@ -5,7 +5,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 export function loadGroundModel(game){
         const loader = new GLTFLoader();
         loader.load(
-            '/assets/models/ground_plane.glb',
+            '/assets/models/ground_plane2.glb',
             (gltf) => {
                 const model = gltf.scene;
                 model.traverse(obj => {

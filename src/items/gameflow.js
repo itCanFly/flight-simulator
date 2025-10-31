@@ -146,7 +146,7 @@ export function animate(game) {
         handleCheckpoints(game);
 
         // Update moving clouds with fade animations
-        updateClouds(game.cloudGroup, game.plane, game.camera, deltaTime);
+        //updateClouds(game.cloudGroup, game.plane, game.camera, deltaTime);
 
         if (game.updateExhausts) game.updateExhausts();
         

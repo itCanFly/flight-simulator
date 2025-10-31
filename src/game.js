@@ -8,7 +8,7 @@ import { createRotatingCircle, createArrows } from './scene/waypoints.js';
 import { Music } from './audio/Music.js';
 import { setupControls } from './controls/controls.js';
 import { createCheckpoints } from './scene/checkpoints.js';
-
+import { loadGroundModel } from './scene/scene.js';
 export class Game {
     constructor(containerId) {
         // -----------------
@@ -86,11 +86,12 @@ export class Game {
 
         // Scene Setup
         this.scene = setupScene();
+         this.scene.add(loadGroundModel(this));
         this.sunLight = setupLighting(this.scene);
         this.renderer = setupRenderer(containerId);
         this.camera = setupCamera();
         this.scene.add(this.sunLight);
-
+       
         // Plane Setup
         this.plane = createPlane();
         this.scene.add(this.plane);
@@ -99,7 +100,7 @@ export class Game {
         this.currCheckpointIndex = 0;
 
         this.gridHelper = new THREE.GridHelper(3000, 500);
-        this.scene.add(this.gridHelper);
+        // this.scene.add(this.gridHelper);
 
         this.groundColor = new THREE.Color(0xff0000);
         this.airColor = new THREE.Color(0xffffff);
@@ -108,7 +109,7 @@ export class Game {
         this.ground = null;
 
         // Clouds & Arrows
-        this.cloudGroup = createClouds(this.scene, this.sunLight);
+        // this.cloudGroup = createClouds(this.scene, this.sunLight);
 
 
         // Start with menu music
