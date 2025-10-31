@@ -10,6 +10,7 @@ import { setupControls } from './controls/controls.js';
 import { createCheckpoints } from './scene/checkpoints.js';
 import { createRadarCamera } from './scene/radarCamera.js';
 
+import { loadGroundModel } from './scene/scene.js';
 export class Game {
     constructor(containerId) {
         // -----------------
@@ -24,7 +25,7 @@ export class Game {
         this.scoreInterval = 10;  // seconds
 
         this.verticalVelocity = 0;
-        this.gravity = -0.005;
+        this.gravity = -0.004;
         this.liftStrength = 0.008;
         this.forwardSpeed = 0;
         
@@ -87,11 +88,12 @@ export class Game {
 
         // Scene Setup
         this.scene = setupScene();
+         //this.scene.add(loadGroundModel(this));
         this.sunLight = setupLighting(this.scene);
         this.renderer = setupRenderer(containerId);
         this.camera = setupCamera();
         this.scene.add(this.sunLight);
-
+       
         // Plane Setup
         this.plane = createPlane();
         this.scene.add(this.plane);
@@ -111,7 +113,7 @@ export class Game {
         this.ground = null;
 
         // Clouds & Arrows
-        this.cloudGroup = createClouds(this.scene, this.sunLight);
+        // this.cloudGroup = createClouds(this.scene, this.sunLight);
 
 
         // Start with menu music

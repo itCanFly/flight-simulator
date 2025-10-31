@@ -19,6 +19,17 @@
             overflow-x: hidden;
         }
 
+        /* THREE.JS CANVAS - Make it background */
+        canvas {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 1 !important;
+            pointer-events: none !important;
+        }
+
         /* Starry background effect */
         .stars {
             position: fixed;
@@ -231,21 +242,22 @@
             box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
         }
 
-        /* Hero Section */
+        /* Hero Section - ABOVE CANVAS */
         .hero {
             position: relative;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            z-index: 100;
+            color: white;
+            text-align: center;
+            margin-top: 20vh;
+            pointer-events: none;
         }
 
         .hero-content {
             text-align: center;
             color: white;
-            z-index: 1;
+            z-index: 100;
             padding: 2rem;
+            position: relative;
         }
 
         .hero-title {
@@ -276,6 +288,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+            pointer-events: auto;
         }
 
         .hero-button:hover {
@@ -601,17 +614,65 @@
             background: rgba(71, 85, 105, 0.5);
             transform: translateY(-3px);
         }
+        
+        .dropdown-menu {
+            min-width: 350px;
+        }
+
+        .dropdown-header {
+            padding: 1rem 1.5rem;
+            color: #60a5fa;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .dropdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.3rem;
+            padding: 0.8rem 1.5rem;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            width: 100%;
+        }
+
+        .control-key {
+            background: rgba(59, 130, 246, 0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #60a5fa;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .control-desc {
+            color: #cbd5e1;
+        }
+
+        .dropdown-footer {
+            padding: 1rem 1.5rem;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-style: italic;
+            text-align: center;
+            background: rgba(59, 130, 246, 0.05);
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
-    <!-- Starry background -->
-    <div class="stars" id="stars"></div>
-
     <!-- Navigation Bar -->
     <nav>
         <div class="nav-container">
             <a href="#" class="nav-logo">
-                
                 <span></span>
             </a>
 
@@ -666,50 +727,56 @@
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link">
-                         Gameplay
+                        Gameplay
                         <span class="dropdown-icon">▼</span>
                     </a>
-                    <div class="dropdown-menu" style="min-width: 350px;">
-                        <div style="padding: 1rem 1.5rem; color: #60a5fa; font-weight: bold; font-size: 1.1rem; border-bottom: 2px solid rgba(59, 130, 246, 0.3); margin-bottom: 0.5rem;">
-                            GAME CONTROLS
-                        </div>
-                        <div class="dropdown-item" style="flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.8rem 1.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
-                                <span style="background: rgba(59, 130, 246, 0.2); padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: bold; color: #60a5fa; min-width: 120px;">↑ Up Arrow</span>
-                                <span style="color: #cbd5e1;">→ To go Up</span>
+
+                    <div class="dropdown-menu">
+                        <div class="dropdown-header">GAME CONTROLS</div>
+
+                        <div class="dropdown-item">
+                            <div class="control-row">
+                                <span class="control-key">↑ Up Arrow</span>
+                                <span class="control-desc">→ To go Up</span>
                             </div>
                         </div>
-                        <div class="dropdown-item" style="flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.8rem 1.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
-                                <span style="background: rgba(59, 130, 246, 0.2); padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: bold; color: #60a5fa; min-width: 120px;">← → Arrows</span>
-                                <span style="color: #cbd5e1;">→ Turn sideways</span>
+
+                        <div class="dropdown-item">
+                            <div class="control-row">
+                                <span class="control-key">← → Arrows</span>
+                                <span class="control-desc">→ Turn sideways</span>
                             </div>
                         </div>
-                        <div class="dropdown-item" style="flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.8rem 1.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
-                                <span style="background: rgba(59, 130, 246, 0.2); padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: bold; color: #60a5fa; min-width: 120px;">W</span>
-                                <span style="color: #cbd5e1;">→ Increase speed</span>
+
+                        <div class="dropdown-item">
+                            <div class="control-row">
+                                <span class="control-key">W</span>
+                                <span class="control-desc">→ Increase speed</span>
                             </div>
                         </div>
-                        <div class="dropdown-item" style="flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.8rem 1.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
-                                <span style="background: rgba(59, 130, 246, 0.2); padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: bold; color: #60a5fa; min-width: 120px;">S</span>
-                                <span style="color: #cbd5e1;">→ Reduce speed</span>
+
+                        <div class="dropdown-item">
+                            <div class="control-row">
+                                <span class="control-key">S</span>
+                                <span class="control-desc">→ Reduce speed</span>
                             </div>
                         </div>
-                        <div class="dropdown-item" style="flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.8rem 1.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
-                                <span style="background: rgba(59, 130, 246, 0.2); padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: bold; color: #60a5fa; min-width: 120px;">C</span>
-                                <span style="color: #cbd5e1;">→ Change View</span>
+
+                        <div class="dropdown-item">
+                            <div class="control-row">
+                                <span class="control-key">C</span>
+                                <span class="control-desc">→ Change View</span>
                             </div>
                         </div>
-                        <div class="dropdown-item" style="flex-direction: column; align-items: flex-start; gap: 0.3rem; padding: 0.8rem 1.5rem; border-bottom: none;">
-                            <div style="display: flex; align-items: center; gap: 0.8rem; width: 100%;">
-                                <span style="background: rgba(59, 130, 246, 0.2); padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: bold; color: #60a5fa; min-width: 120px;">Space</span>
-                                <span style="color: #cbd5e1;">→ Pause/Resume</span>
+
+                        <div class="dropdown-item">
+                            <div class="control-row">
+                                <span class="control-key">Space</span>
+                                <span class="control-desc">→ Pause/Resume</span>
                             </div>
                         </div>
-                        <div style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.85rem; font-style: italic; text-align: center; background: rgba(59, 130, 246, 0.05); margin-top: 0.5rem;">
+
+                        <div class="dropdown-footer">
                             Master these controls to become a skilled pilot!
                         </div>
                     </div>
@@ -726,20 +793,13 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero Section (IN FRONT) -->
     <section class="hero">
         <div class="hero-content">
             <h1 class="hero-title">FLYING METRO BOS</h1>
-            <p class="hero-subtitle"></p>
-            
+            <p class="hero-subtitle">Take to the skies</p>
         </div>
-        
-        <!-- Aircraft silhouette -->
-        <svg class="aircraft-silhouette" viewBox="0 0 600 200" fill="white">
-            <path d="M300 50 L450 100 L600 110 L450 120 L300 150 L150 120 L0 110 L150 100 Z"/>
-            <path d="M300 150 L300 180 L320 190 L280 190 Z"/>
-            <path d="M200 100 L200 90 L400 90 L400 100"/>
-        </svg>
+        <script type="module" src="../src/menuMain.js"></script>
     </section>
 
     <!-- Audio Settings Popup -->
@@ -806,18 +866,6 @@
     </div>
 
     <script>
-        // Generate stars
-        const starsContainer = document.getElementById('stars');
-        for (let i = 0; i < 150; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 3 + 's';
-            star.style.animationDuration = (2 + Math.random() * 3) + 's';
-            starsContainer.appendChild(star);
-        }
-
         // Mobile menu toggle
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
         const navMenu = document.getElementById('navMenu');
@@ -918,6 +966,8 @@
                 muteAllStatus.textContent = 'Off';
             }
         });
+        
+        // Level selection functionality
         document.querySelectorAll('.dropdown-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
