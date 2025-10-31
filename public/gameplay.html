@@ -47,6 +47,28 @@
                     <span class="stat-value" id="timeValue">0:00</span>
                 </div>
             </div>
+                        <!-- NEW RACING GAUGES (bottom center) -->
+            <div class="racing-gauges" id="gauges">
+                <!-- Altitude Gauge (Left) -->
+                <div class="gauge-wrapper">
+                    <canvas id="altitudeGauge" width="160" height="160" class="gauge-canvas"></canvas>
+                    <div class="gauge-label">Altitude</div>
+                </div>
+
+                <!-- Speed Gauge (Center - Large) -->
+                <div class="gauge-wrapper">
+                    <canvas id="speedGauge" width="220" height="220" class="gauge-canvas"></canvas>
+                    <div class="gauge-label">km/h</div>
+                    <div class="gauge-digital" id="speedGaugeValue">0</div>
+                    <div class="gear-display-gauge" id="gearDisplay">N</div>
+                </div>
+
+                <!-- Fuel Gauge (Right) -->
+                <div class="gauge-wrapper">
+                    <canvas id="fuelGaugeCanvas" width="160" height="160" class="gauge-canvas"></canvas>
+                    <div class="gauge-label">Fuel</div>
+                </div>
+            </div>
             <div class="dialogue-popup" id="dialogue-popup">
                 <div class="character-section">
                     <div class="character-avatar" id="characterAvatar"></div>

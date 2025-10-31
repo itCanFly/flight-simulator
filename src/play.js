@@ -59,7 +59,9 @@ const skipButton = document.getElementById('skipButton');
 skipButton.addEventListener('click', () => {
     // Hide the dialogue popup
     document.getElementById('dialogue-popup').style.display = 'none';
-    
+     document.getElementById('gauges').style.display = 'flex';
+
+     
     // Start the countdown and game
     startCountdown(() => {
         start(myGame);
@@ -205,8 +207,10 @@ nextButton.addEventListener('click', () => {
 
         nextButton.onclick = () => {
           document.getElementById('dialogue-popup').style.display = 'none';
+           document.getElementById('gauges').style.display = 'flex';
             startCountdown(() => {
                 start(myGame);
+               
             });
             start(myGame);
         };
@@ -503,3 +507,145 @@ quitLoseButton.addEventListener('click', () => {
     localStorage.setItem('showLevelSelection', 'true');
     window.location.href = '/menu.html';
 });
+
+// Racing Gauges Drawing Function
+function drawGauge(canvasId, value, maxValue, color, label) {
+const canvas = document.getElementById(canvasId);
+if (!canvas) return;
+
+const ctx = canvas.getContext('2d');
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = Math.min(centerX, centerY) - 20;
+const startAngle = -225;
+const endAngle = 45;
+
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// Background circle
+ctx.beginPath();
+ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(40, 39, 49, 0.95)';
+ctx.fill();
+ctx.strokeStyle = 'rgba(6, 14, 133, 0.15)';
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// Tick marks
+const totalAngle = endAngle - startAngle;
+const numTicks = 10;
+
+for (let i = 0; i <= numTicks; i++) {
+    const angle = (startAngle + (totalAngle * i / numTicks)) * Math.PI / 180;
+    const startRadius = radius - 12;
+    const endRadius = radius - 5;
+    
+    ctx.beginPath();
+    ctx.moveTo(centerX + Math.cos(angle) * startRadius,centerY + Math.sin(angle) * startRadius);
+    ctx.lineTo(centerX + Math.cos(angle) * endRadius,centerY + Math.sin(angle) * endRadius);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Numbers
+    if (i % 2 === 0) {
+        const numberRadius = radius - 25;
+        const tickValue = Math.round((maxValue * i / numTicks));
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.font = 'bold 11px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+            tickValue,
+            centerX + Math.cos(angle) * numberRadius,
+            centerY + Math.sin(angle) * numberRadius
+        );
+    }
+}
+
+// Colored arc
+const valueAngle = startAngle + (totalAngle * Math.min(value, maxValue) / maxValue);
+ctx.beginPath();
+ctx.arc(
+    centerX, 
+    centerY, 
+    radius - 8,
+    startAngle * Math.PI / 180,
+    valueAngle * Math.PI / 180
+);
+ctx.strokeStyle = color;
+ctx.lineWidth = 6;
+ctx.stroke();
+
+// Needle
+const needleAngle = valueAngle * Math.PI / 180;
+ctx.beginPath();
+ctx.moveTo(centerX, centerY);
+ctx.lineTo(
+    centerX + Math.cos(needleAngle) * (radius - 15),
+    centerY + Math.sin(needleAngle) * (radius - 15)
+);
+ctx.strokeStyle = '#fff';
+ctx.lineWidth = 3;
+ctx.lineCap = 'round';
+ctx.stroke();
+
+// Center cap
+ctx.beginPath();
+ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+ctx.fillStyle = '#fff';
+ctx.fill();
+}
+
+// Update gauges based on game stats
+function updateRacingGauges() {
+const speedElement = document.getElementById('speedValue');
+const fuelElement = document.getElementById('fuelValue');
+
+if (speedElement && fuelElement) {
+    const speedText = speedElement.textContent;
+    const fuelText = fuelElement.textContent;
+    
+    const speed = parseInt(speedText) || 0;
+    const fuel = parseInt(fuelText) || 0;
+    
+    // Draw gauges
+    drawGauge('speedGauge', speed, 300, '#00ff88', 'Speed');
+    drawGauge('altitudeGauge', speed * 0.8, 250, '#4a9eff', 'Altitude');
+    drawGauge('fuelGaugeCanvas', fuel, 100, '#ffaa00', 'Fuel');
+    
+    // Update digital speed display
+    const speedGaugeValue = document.getElementById('speedGaugeValue');
+    if (speedGaugeValue) {
+        speedGaugeValue.textContent = Math.round(speed);
+    }
+    
+    // Update gear display based on speed
+    const gearDisplay = document.getElementById('gearDisplay');
+    if (gearDisplay) {
+        if (speed === 0) gearDisplay.textContent = 'N';
+        else if (speed < 50) gearDisplay.textContent = '1';
+        else if (speed < 100) gearDisplay.textContent = '2';
+        else if (speed < 150) gearDisplay.textContent = '3';
+        else if (speed < 200) gearDisplay.textContent = '4';
+        else if (speed < 250) gearDisplay.textContent = '5';
+        else gearDisplay.textContent = '6';
+    }
+}
+}
+
+// Initialize gauges
+drawGauge('speedGauge', 0, 300, '#00ff88', 'Speed');
+drawGauge('altitudeGauge', 0, 250, '#4a9eff', 'Altitude');
+drawGauge('fuelGaugeCanvas', 100, 100, '#5a0b0bff', 'Fuel');
+
+// Update gauges periodically
+setInterval(updateRacingGauges, 100);
+
+// Observer to detect changes in speed/fuel elements
+const observer = new MutationObserver(updateRacingGauges);
+const speedValue = document.getElementById('speedValue');
+const fuelValue = document.getElementById('fuelValue');
+
+if (speedValue) observer.observe(speedValue, { childList: true, characterData: true, subtree: true });
+if (fuelValue) observer.observe(fuelValue, { childList: true, characterData: true, subtree: true });
