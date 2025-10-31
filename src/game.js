@@ -86,7 +86,7 @@ export class Game {
 
         // Scene Setup
         this.scene = setupScene();
-         this.scene.add(loadGroundModel(this));
+         //this.scene.add(loadGroundModel(this));
         this.sunLight = setupLighting(this.scene);
         this.renderer = setupRenderer(containerId);
         this.camera = setupCamera();
@@ -100,7 +100,7 @@ export class Game {
         this.currCheckpointIndex = 0;
 
         this.gridHelper = new THREE.GridHelper(3000, 500);
-        // this.scene.add(this.gridHelper);
+        this.scene.add(this.gridHelper);
 
         this.groundColor = new THREE.Color(0xff0000);
         this.airColor = new THREE.Color(0xffffff);
