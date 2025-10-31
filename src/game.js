@@ -7,6 +7,7 @@ import { setupScene, setupLighting, setupRenderer, setupCamera } from './scene/s
 import { createRotatingCircle, createArrows } from './scene/waypoints.js';
 import { Music } from './audio/Music.js';
 import { setupControls } from './controls/controls.js';
+import { createCheckpoints } from './scene/checkpoints.js';
 
 export class Game {
     constructor(containerId) {
@@ -57,7 +58,7 @@ export class Game {
         this.isAltitudeWarningActive = false;
         this.altitudeWarningElement = null;
 
-        // Ground collision system
+        // Ground collision systemhttps://github.com/itCanFly/flight-simulator/tags
         this.TAKEOFF_HEIGHT_THRESHOLD = 5; // Height required to be considered "taken off"
         this.GROUND_LEVEL = 1; // Ground level Y position
         this.CRASH_THRESHOLD = 0.5; // Plane crashes when it hits close to ground level
@@ -93,6 +94,9 @@ export class Game {
         // Plane Setup
         this.plane = createPlane();
         this.scene.add(this.plane);
+
+        this.checkpoints = createCheckpoints(this.level, this.scene);
+        this.currCheckpointIndex = 0;
 
         this.gridHelper = new THREE.GridHelper(3000, 500);
         this.scene.add(this.gridHelper);
