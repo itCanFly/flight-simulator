@@ -23,7 +23,7 @@ export class Game {
         this.scoreInterval = 10;  // seconds
 
         this.verticalVelocity = 0;
-        this.gravity = -0.005;
+        this.gravity = -0.004;
         this.liftStrength = 0.008;
         this.forwardSpeed = 0;
         

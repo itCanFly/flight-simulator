@@ -234,17 +234,16 @@
         /* Hero Section */
         .hero {
             position: relative;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            z-index: 10; /* higher than canvas */
+            color: white;
+            text-align: center;
+            margin-top: 20vh;
         }
 
         .hero-content {
             text-align: center;
             color: white;
-            z-index: 1;
+            z-index: 10;
             padding: 2rem;
         }
 
@@ -605,7 +604,7 @@
 </head>
 <body>
     <!-- Starry background -->
-    <div class="stars" id="stars"></div>
+    <!-- <div class="stars" id="stars"></div> -->
 
     <!-- Navigation Bar -->
     <nav>
@@ -733,13 +732,13 @@
             <p class="hero-subtitle"></p>
             
         </div>
-        
+        <script type="module" src="../src/menuMain.js"></script>
         <!-- Aircraft silhouette -->
-        <svg class="aircraft-silhouette" viewBox="0 0 600 200" fill="white">
+        <!-- <svg class="aircraft-silhouette" viewBox="0 0 600 200" fill="white">
             <path d="M300 50 L450 100 L600 110 L450 120 L300 150 L150 120 L0 110 L150 100 Z"/>
             <path d="M300 150 L300 180 L320 190 L280 190 Z"/>
             <path d="M200 100 L200 90 L400 90 L400 100"/>
-        </svg>
+        </svg> -->
     </section>
 
     <!-- Audio Settings Popup -->
@@ -807,16 +806,16 @@
 
     <script>
         // Generate stars
-        const starsContainer = document.getElementById('stars');
-        for (let i = 0; i < 150; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 3 + 's';
-            star.style.animationDuration = (2 + Math.random() * 3) + 's';
-            starsContainer.appendChild(star);
-        }
+        // const starsContainer = document.getElementById('stars');
+        // for (let i = 0; i < 150; i++) {
+        //     const star = document.createElement('div');
+        //     star.className = 'star';
+        //     star.style.left = Math.random() * 100 + '%';
+        //     star.style.top = Math.random() * 100 + '%';
+        //     star.style.animationDelay = Math.random() * 3 + 's';
+        //     star.style.animationDuration = (2 + Math.random() * 3) + 's';
+        //     starsContainer.appendChild(star);
+        // }
 
         // Mobile menu toggle
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
