@@ -1,7 +1,7 @@
 // game.js
 import * as THREE from 'three';
 import { createPlane } from './plane.js';
-//import { createClouds} from './clouds/clouds.js';
+import { createClouds} from './clouds/clouds.js';
 import { getFormatted } from './scene/stats.js';
 import { setupScene, setupLighting, setupRenderer, setupCamera } from './scene/setup.js';
 import { createRotatingCircle, createArrows } from './scene/waypoints.js';
@@ -58,7 +58,7 @@ export class Game {
         this.isAltitudeWarningActive = false;
         this.altitudeWarningElement = null;
 
-        // Ground collision system
+        // Ground collision systemhttps://github.com/itCanFly/flight-simulator/tags
         this.TAKEOFF_HEIGHT_THRESHOLD = 5; // Height required to be considered "taken off"
         this.GROUND_LEVEL = 1; // Ground level Y position
         this.CRASH_THRESHOLD = 0.5; // Plane crashes when it hits close to ground level
@@ -108,12 +108,12 @@ export class Game {
         this.ground = null;
 
         // Clouds & Arrows
-        //this.cloudGroup = createClouds(this.scene, this.sunLight);
+        this.cloudGroup = createClouds(this.scene, this.sunLight);
 
 
         // Start with menu music
         this.music = new Music();
-        //this.music.playMenu();
+        this.music.playMenu();
 
         this.camera.position.set(0, 8, 8);
         this.camera.lookAt(this.plane.position);
