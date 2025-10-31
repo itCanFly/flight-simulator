@@ -46,7 +46,7 @@ export function updateControls(game) {
     if (keys.ArrowUp) game.verticalVelocity += game.liftStrength;
 
     if (keys.ArrowDown){
-        game.verticalVelocity+=0.75*game.gravity;
+        game.verticalVelocity-=game.liftStrength;
     }
     if (keys.ArrowLeft) {
         game.plane.rotation.y += 0.009;
