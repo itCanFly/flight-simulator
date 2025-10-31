@@ -25,7 +25,7 @@ const FOG_OVERLAY_CONFIG = {
 const CLOUD_ALTITUDE_OFFSET = 350; // << raised layer
 
 const CLOUD_CONFIG = {
-  count: 300,                    // More clouds for better coverage
+  count: 0,                    // More clouds for better coverage
   spawnDistance: 2000,          // Reasonable spawn distance for good coverage
   fadeInDuration: 2.0,          // Seconds to fade in
   // gameplay plane (y≈1–10) flies well below cloud deck.

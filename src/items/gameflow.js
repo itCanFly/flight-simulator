@@ -174,6 +174,9 @@ export function animate(game) {
         }
 
         game.camera.lookAt(game.plane.position);
+
+        
+
         // shakeCamera(this.camera,0.25);
         game.renderer.render(game.scene, game.camera);
 

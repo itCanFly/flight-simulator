@@ -8,6 +8,7 @@ import { createRotatingCircle, createArrows } from './scene/waypoints.js';
 import { Music } from './audio/Music.js';
 import { setupControls } from './controls/controls.js';
 import { createCheckpoints } from './scene/checkpoints.js';
+import { loadGroundModel, loadRunwayModel, loadSkybox } from './scene/scene.js';
 
 export class Game {
     constructor(containerId) {
@@ -54,7 +55,7 @@ export class Game {
 
         // Altitude warning system
         // this.ALTITUDE_WARNING_THRESHOLD = 700; // Warning when getting too high
-        this.ALTITUDE_GAME_OVER_THRESHOLD = 900; // Game over threshold
+        this.ALTITUDE_GAME_OVER_THRESHOLD = 2000; // Game over threshold
         this.isAltitudeWarningActive = false;
         this.altitudeWarningElement = null;
 
@@ -98,14 +99,20 @@ export class Game {
         this.checkpoints = createCheckpoints(this.level, this.scene);
         this.currCheckpointIndex = 0;
 
-        this.gridHelper = new THREE.GridHelper(3000, 500);
-        this.scene.add(this.gridHelper);
+    // debug grid helper removed
 
         this.groundColor = new THREE.Color(0xff0000);
         this.airColor = new THREE.Color(0xffffff);
 
         // Ground model 
         this.ground = null;
+        // load skybox (non-blocking)
+        try { loadSkybox(this.scene); } catch (e) { console.warn('loadSkybox call failed', e); }
+        // load external ground model (adds to this.scene and sets this.ground when ready)
+        loadGroundModel(this);
+        // load runway and place it on top of the ground at the requested coordinates
+        // Coordinates: x=1800, y=1, z=-1200
+        loadRunwayModel(this, new THREE.Vector3(1800, 1, -1200));
 
         // Clouds & Arrows
         this.cloudGroup = createClouds(this.scene, this.sunLight);
