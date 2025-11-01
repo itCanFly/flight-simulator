@@ -9,6 +9,7 @@ import { Music } from './audio/Music.js';
 import { setupControls } from './controls/controls.js';
 import { createCheckpoints } from './scene/checkpoints.js';
 import { loadGroundModel, loadRunwayModel, loadSkybox } from './scene/scene.js';
+import { createRadarCamera } from './scene/radarCamera.js';
 
 export class Game {
     constructor(containerId) {
@@ -96,6 +97,8 @@ export class Game {
         // Plane Setup
         this.plane = createPlane();
         this.scene.add(this.plane);
+
+        this.radarCamera = createRadarCamera();
 
         this.checkpoints = createCheckpoints(this.level, this.scene);
         this.currCheckpointIndex = 0;
