@@ -155,13 +155,13 @@ export function animate(game) {
             game.rotatingCircle.rotation.z += 0.02;
         }
 
-        game.camera.position.x = game.plane.position.x - 5 * Math.sin(game.plane.rotation.y);
-        game.camera.position.z = game.plane.position.z - 5 * Math.cos(game.plane.rotation.y);
+        game.camera.position.x = game.plane.position.x - 10 * Math.sin(game.plane.rotation.y);
+        game.camera.position.z = game.plane.position.z - 10 * Math.cos(game.plane.rotation.y);
         game.camera.position.y = game.plane.position.y + 6;
         
         if (game.cameraMode === "thirdPerson") {
-            game.camera.position.x = game.plane.position.x - 5 * Math.sin(game.plane.rotation.y);
-            game.camera.position.z = game.plane.position.z - 5 * Math.cos(game.plane.rotation.y);
+            game.camera.position.x = game.plane.position.x - 10 * Math.sin(game.plane.rotation.y);
+            game.camera.position.z = game.plane.position.z - 10 * Math.cos(game.plane.rotation.y);
             game.camera.position.y = game.plane.position.y + 6;
             
         }

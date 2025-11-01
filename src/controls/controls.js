@@ -30,7 +30,7 @@ export function updateControls(game) {
         game.music.stopMovementAudio();
          return;
     }
-    const targetForwardSpeed = 1.5;
+    game.targetForwardSpeed = 1.0;
     const { keys } = game;
 
     const isMoving = keys.ArrowUp || keys.ArrowLeft || keys.ArrowRight || game.forwardSpeed > 0;
