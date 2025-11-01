@@ -30,7 +30,7 @@ export function updateControls(game) {
         game.music.stopMovementAudio();
          return;
     }
-    game.targetForwardSpeed = 1.0;
+    // game.targetForwardSpeed = 1.0;
     const { keys } = game;
 
     const isMoving = keys.ArrowUp || keys.ArrowLeft || keys.ArrowRight || game.forwardSpeed > 0;
@@ -46,7 +46,7 @@ export function updateControls(game) {
     if (keys.ArrowUp) game.verticalVelocity += game.liftStrength;
 
     if (keys.ArrowDown){
-        game.verticalVelocity-=game.liftStrength;
+        game.verticalVelocity-=0.5*game.liftStrength;
     }
     if (keys.ArrowLeft) {
         game.plane.rotation.y += 0.009;
