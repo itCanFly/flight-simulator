@@ -4,7 +4,7 @@ import { createPlane } from './plane.js';
 import { createClouds} from './clouds/clouds.js';
 import { getFormatted } from './scene/stats.js';
 import { setupScene, setupLighting, setupRenderer, setupCamera } from './scene/setup.js';
-import { createRotatingCircle, createArrows } from './scene/waypoints.js';
+//import { createRotatingCircle, createArrows } from './scene/waypoints.js';
 import { Music } from './audio/Music.js';
 import { setupControls } from './controls/controls.js';
 import { createCheckpoints } from './scene/checkpoints.js';
@@ -151,9 +151,9 @@ export class Game {
         window.addEventListener('resize', () => this._onResize());
         
         // Initialize arrows
-        this.arrows = createArrows(this.scene);
-        // Create rotating circle
-        this.rotatingCircle = createRotatingCircle(this.scene);
+        // this.arrows = createArrows(this.scene);
+        // // Create rotating circle
+        // this.rotatingCircle = createRotatingCircle(this.scene);
  
         // Setup explosion system
         setupExplosion(this.scene, this.camera, this.renderer);
