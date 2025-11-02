@@ -70,7 +70,7 @@ async function preloadExplosionFrames(loader) {
   // Explosion frames: explosion0001.png to explosion0060.png (60 files)
   for (let i = 1; i <= totalFrames; i++) {
     const num = i.toString().padStart(4, '0');
-    const url = `public/assets/textures/Explosion 1/Explosion 1/explosion${num}.png`;
+    const url = `assets/textures/Explosion 1/Explosion 1/explosion${num}.png`;
     promises.push(
       new Promise((resolve) => {
         loader.load(
@@ -96,7 +96,7 @@ async function preloadExplosionFrames(loader) {
   // Ground explosion frames: GroundExploded0001.png to GroundExploded0100.png (100 files)
   for (let i = 1; i <= totalGroundFrames; i++) {
     const num = i.toString().padStart(4, '0');
-    const url = `public/assets/textures/Ground Exploded/Ground Exploded/GroundExploded${num}.png`;
+    const url = `assets/textures/Ground Exploded/Ground Exploded/GroundExploded${num}.png`;
     promises.push(
       new Promise((resolve) => {
         loader.load(

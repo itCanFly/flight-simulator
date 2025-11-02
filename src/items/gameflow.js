@@ -241,8 +241,8 @@ export function animate(game) {
         // Update camera position based on mode (only if not crashing)
         if (!game._isCrashing) {
             if (game.cameraMode === "thirdPerson") {
-                game.camera.position.x = game.plane.position.x - 10 * Math.sin(game.plane.rotation.y);
-                game.camera.position.z = game.plane.position.z - 10 * Math.cos(game.plane.rotation.y);
+                game.camera.position.x = game.plane.position.x - 5 * Math.sin(game.plane.rotation.y);
+                game.camera.position.z = game.plane.position.z - 5 * Math.cos(game.plane.rotation.y);
                 game.camera.position.y = game.plane.position.y + 6;
             }
             else if (game.cameraMode === "topView") {
