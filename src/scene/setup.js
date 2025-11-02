@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 export function setupScene() {
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x88ccee, 0.0012);
+    scene.fog = new THREE.FogExp2(0x88ccee, 0.0008); // Reduced fog density for better performance
     return scene;
 }
 
@@ -10,8 +10,8 @@ export function setupLighting(scene) {
     const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
     sunLight.position.set(100, 200, 100);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.mapSize.width = 1024; // Reduced from 2048 for better performance
+    sunLight.shadow.mapSize.height = 1024;
     sunLight.shadow.camera.near = 0.5;
     sunLight.shadow.camera.far = 500;
     sunLight.shadow.camera.left = -200;
@@ -27,8 +27,13 @@ export function setupLighting(scene) {
 }
 
 export function setupRenderer(containerId) {
-    const renderer = new THREE.WebGLRenderer();
+    const renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        powerPreference: "high-performance",
+        stencil: false
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
     renderer.setClearColor(0x88ccee);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;

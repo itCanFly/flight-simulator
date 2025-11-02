@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createFuelCan } from '../fuelTank.js';
 import { getWaypointsForLevel } from '../scene/waypoints.js';
+import { HUD } from '../ui/hud.js';
 
 export function spawnFuelCans(game) {
     const { scene, fuelCans } = game;
@@ -17,9 +18,13 @@ export function spawnFuelCans(game) {
         const pos = curve.getPoint(t);
         pos.y += 10;
 
+        const pickupAmount = 15;
         const { group, update } = createFuelCan({
-            size: 40,
-            onPickup: () => game.stats.fuel = Math.min(100, game.stats.fuel + 25)
+            size: 50,
+            onPickup: () => {
+                game.stats.fuel = Math.min(100, game.stats.fuel + pickupAmount);
+                try { HUD.showFuelPickup(pickupAmount); } catch (e) {}
+            }
         });
 
         group.position.copy(pos);

@@ -1,22 +1,148 @@
 import { Game } from './game.js';
+import { HUD } from './ui/hud.js';
 import { start, resume,changeState,resetPosition } from './items/gameflow.js';
 import { stopStats } from './items/gameflow.js';
+// Defensive shim: guard Range methods against detached nodes to avoid
+// InvalidNodeTypeError thrown by third-party scripts/extensions that
+// attempt to manipulate Ranges on nodes which no longer have a parent.
+// This is a temporary runtime safeguard for testing; it logs a single
+// warning the first time it intercepts a call.
+(function(){
+    try {
+        if (typeof Range === 'undefined' || !Range.prototype) return;
+        let _warned = false;
+        const _maybeWarn = (msg, e) => { if (!_warned) { try { console.warn(msg, e || ''); } catch (err) {} _warned = true; } };
+
+        const _origSetStartBefore = Range.prototype.setStartBefore;
+        Range.prototype.setStartBefore = function(node) {
+            try {
+                if (!node || !node.parentNode) { _maybeWarn('[shim] blocked Range.setStartBefore on detached node'); return; }
+                return _origSetStartBefore.call(this, node);
+            } catch (err) { _maybeWarn('[shim] Range.setStartBefore threw', err); }
+        };
+
+        const _origSetEndAfter = Range.prototype.setEndAfter;
+        Range.prototype.setEndAfter = function(node) {
+            try {
+                if (!node || !node.parentNode) { _maybeWarn('[shim] blocked Range.setEndAfter on detached node'); return; }
+                return _origSetEndAfter.call(this, node);
+            } catch (err) { _maybeWarn('[shim] Range.setEndAfter threw', err); }
+        };
+    } catch (e) { try { console.warn('[shim] failed to install Range guards', e); } catch (err) {} }
+})();
 // -----------------
 // UI & Game Logic
 // -----------------
 const gameScreen = document.getElementById('gameScreen');
-gameScreen.style.display = 'block';const myGame = new Game("gameScreen");
+if (gameScreen) gameScreen.style.display = 'block';
+const myGame = new Game("gameScreen");
 myGame.isAnimating = false;
-// Screen elements
-myGame.music.playButton();
-start(myGame);
+// Initialize HUD and screen elements
+try { HUD.init(myGame); } catch (e) {}
+// Temporary global handlers to capture unexpected errors and unhandled promise rejections.
+// These help diagnose extension/channel issues and other runtime problems during testing.
+try {
+    window.addEventListener('unhandledrejection', (e) => {
+        try { console.error('[unhandledrejection]', e && e.reason ? e.reason : e); } catch (err) {}
+    });
+    window.addEventListener('error', (e) => {
+        try { console.error('[window.error]', e && e.message ? e.message : e); } catch (err) {}
+    });
+} catch (err) {}
+// Setup touch control event delegation so mobile users can play using on-screen buttons.
+function _dispatchKeyEvent(type, code) {
+    try {
+        const ev = new KeyboardEvent(type, { code, key: code, bubbles: true, cancelable: true });
+        window.dispatchEvent(ev);
+    } catch (e) {}
+}
+
+function _bindTouchControls() {
+    try {
+        const container = document.getElementById('touchControls');
+        if (!container) return;
+        // Use pointer events for unified handling (mouse/touch)
+        container.addEventListener('pointerdown', (ev) => {
+            const btn = ev.target.closest && ev.target.closest('.touch-button');
+            if (!btn) return;
+            ev.preventDefault();
+            const code = btn.getAttribute('data-key');
+            if (code) _dispatchKeyEvent('keydown', code);
+        });
+        container.addEventListener('pointerup', (ev) => {
+            const btn = ev.target.closest && ev.target.closest('.touch-button');
+            if (!btn) return;
+            ev.preventDefault();
+            const code = btn.getAttribute('data-key');
+            if (code) _dispatchKeyEvent('keyup', code);
+        });
+        // also handle pointerleave/cancel to release buttons if finger slides away
+        container.addEventListener('pointercancel', (ev) => {
+            const btn = ev.target.closest && ev.target.closest('.touch-button');
+            if (!btn) return;
+            const code = btn.getAttribute('data-key');
+            if (code) _dispatchKeyEvent('keyup', code);
+        });
+    } catch (e) {}
+}
+
+// Bind after DOM ready
+try { window.addEventListener('load', _bindTouchControls); } catch (e) {}
+
+// -----------------
+// Asset Loading & Game Initialization
+// -----------------
+(async () => {
+    console.log('🎮 Initializing flight simulator...');
+    
+    // Get loading screen elements (matching index.html style)
+    const loadingScreen = document.getElementById('assetLoadingScreen');
+    const progressBar = document.getElementById('assetProgressBar');
+    
+    // Start with some initial progress
+    if (progressBar) progressBar.style.width = '10%';
+    
+    // Wait for all assets to load before starting the game
+    const assetsLoaded = await myGame.waitForAssets();
+    
+    // Update progress to show completion
+    if (progressBar) progressBar.style.width = '100%';
+    
+    if (!assetsLoaded) {
+        console.error('❌ Failed to load game assets. Game may not work correctly.');
+    }
+    
+    // Position camera to show the loaded scene before game starts
+    myGame.camera.position.set(1800, 50, -850);
+    myGame.camera.lookAt(1800, 1, -1100);
+    
+    // Render the scene once more to show everything is ready
+    myGame.renderer.render(myGame.scene, myGame.camera);
+    
+    // Wait a moment to show the completed loading bar, then hide loading screen
+    setTimeout(() => {
+        if (loadingScreen) loadingScreen.classList.add('hidden');
+        
+        console.log('🚀 Starting game...');
+        
+        // Screen elements
+        myGame.music.playButton();
+        start(myGame);
+
+        // Ensure on-screen gauges are visible when gameplay begins (fade-in)
+        try { const gaugesEl = document.getElementById('gauges'); if (gaugesEl) { gaugesEl.style.display = 'flex'; gaugesEl.classList.add('visible'); } } catch (e) {}
+    }, 800); // Increased from 500ms to 800ms so you can see it
+})();
+
 myGame.level = localStorage.getItem('selectedLevel');
 var dialogues = [
+            
             {
                 character: "Mr Ingram",
                 avatar: "",
                 text: "Hello there! You must be Json right?"
             },
+            
             {
                 character: "Jason",
                 avatar: "",
@@ -27,16 +153,19 @@ var dialogues = [
                 avatar: "",
                 text: "Json... Jason... JavaScript... who can keep track these days? Listen, I need you to transport cargo from OR Tambo to Cape Town!"
             },
+            
             {
                 character: "Jason",
                 avatar: "",
                 text: "What kind of cargo?"
             },
+            
             {
                 character: "Mr Ingram",
                 avatar: "",
                 text: "47 boxes of wigs, hot sauce, and one VERY precious disco ball. If that disco ball gets scratched, you're fired, Json!"
             },
+            
             {
                 character: "Jason",
                 avatar: "",
@@ -56,21 +185,20 @@ const characterAvatar = document.getElementById('characterAvatar');
 const nextButton = document.getElementById('nextButton');
 const skipButton = document.getElementById('skipButton');
 
-skipButton.addEventListener('click', () => {
-    // Hide the dialogue popup
-    document.getElementById('dialogue-popup').style.display = 'none';
-     document.getElementById('gauges').style.display = 'flex';
+if (skipButton) {
+    skipButton.addEventListener('click', () => {
+        // Hide the dialogue popup
+        const dlg = document.getElementById('dialogue-popup'); if (dlg) dlg.style.display = 'none';
+        const gauges = document.getElementById('gauges'); if (gauges) gauges.style.display = 'flex';
 
-     
-    // Start the countdown and game
-    startCountdown(() => {
+        // Start the game immediately (HUD ascend sequence will handle ascend prompts)
         start(myGame);
     });
-});
+}
 window.addEventListener('load', () => {
     // Default to level 1 if no saved level is found
     if (myGame.level) {
-        document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
+        const lvlEl = document.getElementById('levelInfo'); if (lvlEl) lvlEl.textContent = `Level: ${myGame.level}`;
 
         // If level is 2, change the first dialogue message
         if (myGame.level === "2") {
@@ -95,11 +223,13 @@ window.addEventListener('load', () => {
         avatar: "",
         text: "Already? I just landed! Can I at least get some coffee first?"
     },
+    /* Mr Ingram line removed (Json joke)
     {
         character: "Mr Ingram",
         avatar: "",
         text: "Coffee is for WINNERS, Json! This time you're flying to Durban. Same cargo but DOUBLE the boxes and THREE disco balls!"
     },
+    */
     {
         character: "Jason",
         avatar: "",
@@ -134,11 +264,13 @@ window.addEventListener('load', () => {
         avatar: "",
         text: "Thank you, Mr. Ingram. Finally, you got my name right!"
     },
+    /* Mr Ingram line removed (Json joke)
     {
         character: "Mr Ingram",
         avatar: "",
         text: "Don't get emotional on me, Json. We have ONE FINAL MISSION. The BIG ONE!"
     },
+    */
     {
         character: "Jason",
         avatar: "",
@@ -164,11 +296,13 @@ window.addEventListener('load', () => {
         avatar: "",
         text: "This is absolutely insane. What if Gerald doesn't like flying?"
     },
+    /* Mr Ingram line removed (Json joke)
     {
         character: "Mr Ingram",
         avatar: "",
         text: "Then play him some disco music! Now GET GOING! This is your final test, Json! Make me proud!"
     },
+    */
     {
         character: "Jason",
         avatar: "",
@@ -182,38 +316,36 @@ window.addEventListener('load', () => {
             ];
         }
     } else {
-        document.getElementById('levelInfo').textContent = 'Level: 1';
+        const lvlEl = document.getElementById('levelInfo'); if (lvlEl) lvlEl.textContent = 'Level: 1';
     }
 
     const current = dialogues[currentDialogue];
-    characterName.textContent = current.character;
-    characterAvatar.textContent = current.avatar;
-    dialogueText.textContent = current.text;
+    if (characterName) characterName.textContent = current.character;
+    if (characterAvatar) characterAvatar.textContent = current.avatar;
+    if (dialogueText) dialogueText.textContent = current.text;
 });
-nextButton.addEventListener('click', () => {
+if (nextButton) nextButton.addEventListener('click', () => {
     currentDialogue++;
     
     if (currentDialogue < dialogues.length) {
         const current = dialogues[currentDialogue];
-        characterName.textContent = current.character;
-        characterAvatar.textContent = current.avatar;
-        dialogueText.textContent = current.text;
+        if (characterName) characterName.textContent = current.character;
+        if (characterAvatar) characterAvatar.textContent = current.avatar;
+        if (dialogueText) dialogueText.textContent = current.text;
     } else {
-        dialogueText.textContent = "Ready to fly? Good luck with that disco ball, Json... I mean Jason!";
-        characterName.textContent = "Mission Briefing";
-        characterAvatar.textContent = "";
-        nextButton.textContent = "Start Takeoff!";
-        nextButton.classList.add('start-button');
-
-        nextButton.onclick = () => {
-          document.getElementById('dialogue-popup').style.display = 'none';
-           document.getElementById('gauges').style.display = 'flex';
-            startCountdown(() => {
+        if (dialogueText) dialogueText.textContent = "Ready to fly? Good luck with that disco ball, Jason!";
+        if (characterName) characterName.textContent = "Mission Briefing";
+        if (characterAvatar) characterAvatar.textContent = "";
+        try {
+            nextButton.textContent = "Start Takeoff!";
+            nextButton.classList.add('start-button');
+            nextButton.onclick = () => {
+                const dlg = document.getElementById('dialogue-popup'); if (dlg) dlg.style.display = 'none';
+                const gauges = document.getElementById('gauges'); if (gauges) gauges.style.display = 'flex';
+                // Start immediately; ascend prompts come from HUD.startAscendSequence
                 start(myGame);
-               
-            });
-            start(myGame);
-        };
+            };
+        } catch (e) {}
         
     }
 });
@@ -222,48 +354,7 @@ nextButton.addEventListener('click', () => {
 // ------
 // Countdown Animation Function
 // -----------------
-function startCountdown(callback) {
-    
-    const overlay = document.getElementById('countdownOverlay');
-    const numberEl = document.getElementById('countdownNumber');
-    const sequence = ['3', '2', '1', 'GO!'];
-    let index = 0;
-
-    overlay.classList.add('active');
-
-    function showNext() {
-      
-        if (index >= sequence.length) {
-            myGame.targetForwardSpeed = 1.5;
-            overlay.classList.remove('active');
-       
-            if (callback) {
-               
-                callback();
-            }
-            return;
-        }
-
-        const text = sequence[index];
-        numberEl.textContent = text;
-        numberEl.classList.remove('animate', 'go');
-        
-        if (text === 'GO!') {
-            numberEl.classList.add('go');
-        }
-
-        // Trigger animation
-        setTimeout(() => {
-            numberEl.classList.add('animate');
-        }, 10);
-
-        index++;
-        const delay = text === 'GO!' ? 1500 : 1000;
-        setTimeout(showNext, delay);
-    }
-
-    showNext();
-}
+// countdown overlay removed — HUD handles ascend prompts now
 
 // -----------------
 // Navigation Buttons
@@ -277,10 +368,13 @@ const backToLevel = document.getElementById('backToLevelsButton');
 function updateStats(game) {
     // console.log(game.stats);
     const { speed, fuel } = game.stats;
-    
-    document.getElementById('speedValue').textContent = `${speed} km/h`;
-    document.getElementById('fuelValue').textContent = `${fuel}%`;
-    document.getElementById('fuelBar').style.width = `${fuel}%`;
+    const speedEl = document.getElementById('speedValue'); if (speedEl) speedEl.textContent = `${speed} km/h`;
+    const fuelEl = document.getElementById('fuelValue'); if (fuelEl) {
+        // Hide the initial 100% placeholder so the HUD doesn't show '100%' at startup.
+        // Only display the numeric fuel value once it drops below 100%.
+        fuelEl.textContent = (typeof fuel === 'number' && fuel < 100) ? `${fuel}%` : '';
+    }
+    const fuelBar = document.getElementById('fuelBar'); if (fuelBar) fuelBar.style.width = `${fuel}%`;
 }
 
 myGame.onChange(game => updateStats(game));
@@ -305,21 +399,62 @@ const finalScore = document.getElementById('finalScore');
 const quitButton = document.querySelector('#gameOverPopup #quitButton');
 const restartButton = document.querySelector('#gameOverPopup #restartButton');
 const nextLevelButton = document.querySelector('#nextLevelButton');
-if(myGame.level ==3){
+if (nextLevelButton && myGame.level == 3) {
     nextLevelButton.style.display = 'none';
+}
+// Delay showing the Game Over panel so it doesn't appear prematurely.
+let _gameOverTimeout = null;
+// Show the Game Over popup immediately after crash — set to 0 for instant display.
+const GAME_OVER_POPUP_DELAY = 0; // ms
+
+function scheduleShowGameOver(game) {
+    // clear any existing
+    if (_gameOverTimeout) clearTimeout(_gameOverTimeout);
+    if (GAME_OVER_POPUP_DELAY <= 0) {
+        // Immediate show
+        if (game && game.state === 'GAME_OVER') showGameOverPopup();
+        _gameOverTimeout = null;
+        return;
+    }
+    _gameOverTimeout = setTimeout(() => {
+        // Only show if still in GAME_OVER state
+        if (game && game.state === 'GAME_OVER') showGameOverPopup();
+        _gameOverTimeout = null;
+    }, GAME_OVER_POPUP_DELAY);
+}
+
+function cancelScheduledGameOver() {
+    if (_gameOverTimeout) {
+        clearTimeout(_gameOverTimeout);
+        _gameOverTimeout = null;
+    }
+    try { if (gameOverPopup) gameOverPopup.style.display = 'none'; } catch (e) {}
 }
 // -----------------
 // Functions
 // -----------------
 function showGamePause() {
     myGame.state = 'PAUSED';
-    exit.style.display = 'flex';
+    try { const exitEl = document.getElementById('exit'); if (exitEl) exitEl.style.display = 'flex'; } catch (e) {}
 }
 
 function showGameOverPopup() {
+    // Safety: only show when game is actually over
+    if (!myGame || myGame.state !== 'GAME_OVER') return;
     // Don't change the game state - keep it as 'GAME_OVER'
-    finalScore.textContent = `Score: ${myGame.score}`;
-    gameOverPopup.style.display = 'flex';
+    if (finalScore) finalScore.textContent = `Score: ${myGame.score}`;
+    try {
+        // Only show generic failure details here (no instruments)
+        const timeEl = document.getElementById('go-time');
+        const crashEl = document.getElementById('go-crash-alt');
+        if (timeEl) {
+            const secs = Math.floor((myGame.clock && myGame.clock.getElapsedTime) ? myGame.clock.getElapsedTime() : 0);
+            timeEl.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+        }
+        if (crashEl) crashEl.textContent = `${Math.max(0, Math.round(myGame.plane.position.y))}`;
+    } catch (e) {}
+
+    if (gameOverPopup) gameOverPopup.style.display = 'flex';
 }
 
 // -----------------
@@ -327,54 +462,65 @@ function showGameOverPopup() {
 // -----------------
 myGame.onChange(game => {
     if (game.state === 'GAME_OVER') {
-        showGameOverPopup();
+        scheduleShowGameOver(game);
+    } else {
+        // Cancel any pending show in case state changed back
+        cancelScheduledGameOver();
     }
 });
 
 // -----------------
 // Button Handlers
 // -----------------
-backToLevel.addEventListener('click', () => {
-    myGame.music.playButton();
-    // Show pause popup instead of directly going to levels
-    changeState(myGame); // Pause the game
-    document.getElementById('pausePopup').style.display = 'flex';
-});
+if (backToLevel) {
+    backToLevel.addEventListener('click', () => {
+        myGame.music.playButton();
+        // Show pause popup instead of directly going to levels
+        changeState(myGame); // Pause the game
+        const p = document.getElementById('pausePopup'); if (p) p.style.display = 'flex';
+    });
+}
 
-quitButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    gameOverPopup.style.display = 'none';
-    gameScreen.style.display = 'none';
-    // Reset game state properly without calling gameOver() again
-    myGame.isAnimating = false;
-    stopStats(myGame);
-    resetPosition(myGame);
-    myGame.state = 'MENU';
-    // Go to levels instead of main menu
-    localStorage.setItem('showLevelSelection', 'true');
-    window.location.href = '/menu.html';
-});
+if (quitButton) {
+    quitButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        cancelScheduledGameOver();
+        if (gameOverPopup) gameOverPopup.style.display = 'none';
+        if (gameScreen) gameScreen.style.display = 'none';
+        // Reset game state properly without calling gameOver() again
+        myGame.isAnimating = false;
+        stopStats(myGame);
+        resetPosition(myGame);
+        myGame.state = 'MENU';
+        // Go to levels instead of main menu
+        localStorage.setItem('showLevelSelection', 'true');
+        window.location.href = '/menu.html';
+    });
+}
 
-restartButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    gameOverPopup.style.display = 'none';
-    startCountdown(() => {
+if (restartButton) {
+    restartButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        cancelScheduledGameOver();
+        if (gameOverPopup) gameOverPopup.style.display = 'none';
+        // Restart immediately; HUD will manage ascend prompts
         start(myGame);
     });
-    start(myGame);
+}
 
-});
-
-nextLevelButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    gameOverPopup.style.display = 'none';
-    myGame.level++;
-    // savedLevel++;
-    console.log(myGame.level)
-    localStorage.setItem('selectedLevel', myGame.level);
-    // Redirect to the gameplay page
-    window.location.href = '/gameplay.html';
-});
+if (nextLevelButton) {
+    nextLevelButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        cancelScheduledGameOver();
+        if (gameOverPopup) gameOverPopup.style.display = 'none';
+        myGame.level++;
+        // savedLevel++;
+        console.log(myGame.level)
+        localStorage.setItem('selectedLevel', myGame.level);
+        // Redirect to the gameplay page
+        window.location.href = '/gameplay.html';
+    });
+}
 
 // -----------------
 // Pause Popup Handlers
@@ -384,40 +530,42 @@ const resumeButton = document.getElementById('resumeButton');
 const restartPauseButton = document.getElementById('restartPauseButton');
 const quitPauseButton = document.getElementById('quitPauseButton');
 
-resumeButton.addEventListener('click', () => {
-
-    myGame.music.playButton();
-    // Hide exit popup
-    myGame.isAnimating = true;
-    stopStats(myGame);
-    // resetPosition(myGame);
-
-    pausePopup.style.display = 'none';
-    resume(myGame);
-});
-
-restartPauseButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    pausePopup.style.display = 'none';
-    startCountdown(() => {
-        start(myGame); // Restart the current level
+if (resumeButton) {
+    resumeButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        // Hide exit popup
+        myGame.isAnimating = true;
+        stopStats(myGame);
+        // resetPosition(myGame);
+        if (pausePopup) pausePopup.style.display = 'none';
+        resume(myGame);
     });
-  start(myGame); 
-});
+}
 
-quitPauseButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    gameOverPopup.style.display = 'none';
-    gameScreen.style.display = 'none';
-    // Reset game state properly without calling gameOver() again
-    myGame.isAnimating = false;
-    stopStats(myGame);
-    resetPosition(myGame);
-    myGame.state = 'MENU';
-    // Go to levels instead of main menu
-    localStorage.setItem('showLevelSelection', 'true');
-    window.location.href = '/menu.html';
-});
+if (restartPauseButton) {
+    restartPauseButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        if (pausePopup) pausePopup.style.display = 'none';
+        start(myGame);
+    });
+}
+
+if (quitPauseButton) {
+    quitPauseButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        cancelScheduledGameOver();
+        if (gameOverPopup) gameOverPopup.style.display = 'none';
+        if (gameScreen) gameScreen.style.display = 'none';
+        // Reset game state properly without calling gameOver() again
+        myGame.isAnimating = false;
+        stopStats(myGame);
+        resetPosition(myGame);
+        myGame.state = 'MENU';
+        // Go to levels instead of main menu
+        localStorage.setItem('showLevelSelection', 'true');
+        window.location.href = '/menu.html';
+    });
+}
 
 // Removed exit popup - using only Game Over popup now
 
@@ -436,13 +584,23 @@ const quitLoseButton = document.getElementById('quitLoseButton');
 // Show win popup
 function showWinPopup() {
     myGame.state = 'PAUSE';
-    winPopup.style.display = 'flex';
+    // Populate instruments for successful mission
+    try {
+        if (!myGame) throw new Error('no game');
+        const alt = Math.max(0, Math.round(myGame.plane.position.y));
+        const sp = Math.round((myGame.stats && myGame.stats.speed) ? myGame.stats.speed : (myGame.forwardSpeed || 0));
+        const fu = Math.max(0, Math.round(myGame.stats && myGame.stats.fuel ? myGame.stats.fuel : 0));
+        const winAlt = document.getElementById('win-alt'); if (winAlt) winAlt.textContent = `${alt}`;
+        const winSp = document.getElementById('win-speed'); if (winSp) winSp.textContent = `${sp}`;
+        const winFu = document.getElementById('win-fuel'); if (winFu) winFu.textContent = `${fu}%`;
+    } catch (e) {}
+    if (winPopup) winPopup.style.display = 'flex';
 }
 
 // Show lose popup
 function showLosePopup() {
     myGame.state = 'PAUSE';
-    losePopup.style.display = 'flex';
+    if (losePopup) losePopup.style.display = 'flex';
 }
 
 // Hook into game states
@@ -455,72 +613,96 @@ myGame.onChange((game) => {
 });
 
 // Win popup button events
-nextWinLevelButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    winPopup.style.display = 'none';
-    myGame.level++;
-    document.getElementById('levelInfo').textContent = `Level: ${myGame.level}`;
-    startCountdown(() => {
+if (nextWinLevelButton) {
+    nextWinLevelButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        if (winPopup) winPopup.style.display = 'none';
+        myGame.level++;
+        const lvlInfo = document.getElementById('levelInfo'); if (lvlInfo) lvlInfo.textContent = `Level: ${myGame.level}`;
         start(myGame);
     });
-});
+}
 
-restartWinButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    winPopup.style.display = 'none';
+if (restartWinButton) {
+    restartWinButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        if (winPopup) winPopup.style.display = 'none';
+    });
+}
 
-});
-
-quitWinButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    gameOverPopup.style.display = 'none';
-    gameScreen.style.display = 'none';
-    // Reset game state properly without calling gameOver() again
-    myGame.isAnimating = false;
-    stopStats(myGame);
-    resetPosition(myGame);
-    myGame.state = 'MENU';
-    // Go to levels instead of main menu
-    localStorage.setItem('showLevelSelection', 'true');
-    window.location.href = '/menu.html';
-});
+if (quitWinButton) {
+    quitWinButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        if (gameOverPopup) gameOverPopup.style.display = 'none';
+        if (gameScreen) gameScreen.style.display = 'none';
+        // Reset game state properly without calling gameOver() again
+        myGame.isAnimating = false;
+        stopStats(myGame);
+        resetPosition(myGame);
+        myGame.state = 'MENU';
+        // Go to levels instead of main menu
+        localStorage.setItem('showLevelSelection', 'true');
+        window.location.href = '/menu.html';
+    });
+}
 
 // Lose popup button events
-restartLoseButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    losePopup.style.display = 'none';
-    // startCountdown(() => {
-    //     start(myGame);
-    // });
-});
+if (restartLoseButton) {
+    restartLoseButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        if (losePopup) losePopup.style.display = 'none';
+        // startCountdown(() => {
+        //     start(myGame);
+        // });
+    });
+}
 
-quitLoseButton.addEventListener('click', () => {
-    myGame.music.playButton();
-    gameOverPopup.style.display = 'none';
-    gameScreen.style.display = 'none';
-    // Reset game state properly without calling gameOver() again
-    myGame.isAnimating = false;
-    stopStats(myGame);
-    resetPosition(myGame);
-    myGame.state = 'MENU';
-    // Go to levels instead of main menu
-    localStorage.setItem('showLevelSelection', 'true');
-    window.location.href = '/menu.html';
-});
+if (quitLoseButton) {
+    quitLoseButton.addEventListener('click', () => {
+        myGame.music.playButton();
+        if (gameOverPopup) gameOverPopup.style.display = 'none';
+        if (gameScreen) gameScreen.style.display = 'none';
+        // Reset game state properly without calling gameOver() again
+        myGame.isAnimating = false;
+        stopStats(myGame);
+        resetPosition(myGame);
+        myGame.state = 'MENU';
+        // Go to levels instead of main menu
+        localStorage.setItem('showLevelSelection', 'true');
+        window.location.href = '/menu.html';
+    });
+}
 
 // Racing Gauges Drawing Function
+// per-gauge displayed values for smoothing (needle damping)
+const _gaugeState = {};
+// throttled debug logging to help diagnose needle movement (ms)
+let _lastGaugeLog = 0;
 function drawGauge(canvasId, value, maxValue, color, label) {
 const canvas = document.getElementById(canvasId);
 if (!canvas) return;
-
+// handle high-DPI scaling for crisp gauges
 const ctx = canvas.getContext('2d');
-const centerX = canvas.width / 2;
-const centerY = canvas.height / 2;
+const dpr = window.devicePixelRatio || 1;
+// ensure canvas drawing buffer matches displayed size * DPR
+const displayedWidth = canvas.clientWidth || canvas.width || 120;
+const displayedHeight = canvas.clientHeight || canvas.height || 120;
+if (canvas.width !== Math.round(displayedWidth * dpr) || canvas.height !== Math.round(displayedHeight * dpr)) {
+    canvas.width = Math.round(displayedWidth * dpr);
+    canvas.height = Math.round(displayedHeight * dpr);
+    canvas.style.width = `${displayedWidth}px`;
+    canvas.style.height = `${displayedHeight}px`;
+}
+ctx.setTransform(1,0,0,1,0,0); // reset transform
+ctx.scale(dpr, dpr);
+const centerX = displayedWidth / 2;
+const centerY = displayedHeight / 2;
 const radius = Math.min(centerX, centerY) - 20;
 const startAngle = -225;
 const endAngle = 45;
 
-ctx.clearRect(0, 0, canvas.width, canvas.height);
+// clear using CSS pixel sizes (we already scaled the context by dpr)
+ctx.clearRect(0, 0, displayedWidth, displayedHeight);
 
 // Background circle
 ctx.beginPath();
@@ -531,40 +713,55 @@ ctx.strokeStyle = 'rgba(6, 14, 133, 0.15)';
 ctx.lineWidth = 2;
 ctx.stroke();
 
-// Tick marks
-const totalAngle = endAngle - startAngle;
-const numTicks = 10;
+    // Tick marks
+    const totalAngle = endAngle - startAngle;
+    const numTicks = 10;
 
-for (let i = 0; i <= numTicks; i++) {
-    const angle = (startAngle + (totalAngle * i / numTicks)) * Math.PI / 180;
-    const startRadius = radius - 12;
-    const endRadius = radius - 5;
-    
-    ctx.beginPath();
-    ctx.moveTo(centerX + Math.cos(angle) * startRadius,centerY + Math.sin(angle) * startRadius);
-    ctx.lineTo(centerX + Math.cos(angle) * endRadius,centerY + Math.sin(angle) * endRadius);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // scale font based on radius so small gauges have smaller numbers
+    // use a slightly smaller factor and clamp to keep digits readable but not oversized
+    let baseFontSize = Math.round(radius * 0.095);
+    if (displayedWidth <= 140) baseFontSize = Math.max(7, Math.round(radius * 0.08));
+    baseFontSize = Math.min(18, Math.max(7, baseFontSize));
 
-    // Numbers
-    if (i % 2 === 0) {
-        const numberRadius = radius - 25;
-        const tickValue = Math.round((maxValue * i / numTicks));
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = 'bold 11px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(
-            tickValue,
-            centerX + Math.cos(angle) * numberRadius,
-            centerY + Math.sin(angle) * numberRadius
-        );
+    for (let i = 0; i <= numTicks; i++) {
+        const angle = (startAngle + (totalAngle * i / numTicks)) * Math.PI / 180;
+        const startRadius = radius - 12;
+        const endRadius = radius - 5;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX + Math.cos(angle) * startRadius,centerY + Math.sin(angle) * startRadius);
+        ctx.lineTo(centerX + Math.cos(angle) * endRadius,centerY + Math.sin(angle) * endRadius);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Numbers (only on every other tick) — skip the zero label for a cleaner UI
+        if (i % 2 === 0) {
+            const numberRadius = radius - 25;
+            const tickValue = Math.round((maxValue * i / numTicks));
+            if (tickValue === 0) continue; // omit zero for clarity
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.font = `bold ${baseFontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+                tickValue,
+                centerX + Math.cos(angle) * numberRadius,
+                centerY + Math.sin(angle) * numberRadius
+            );
+        }
     }
-}
 
-// Colored arc
-const valueAngle = startAngle + (totalAngle * Math.min(value, maxValue) / maxValue);
+// Smooth displayed value (simple lerp) so the needle animates instead of snapping
+let displayed = (typeof _gaugeState[canvasId] === 'number') ? _gaugeState[canvasId] : value;
+const lerpFactor = 0.14; // adjust for snappier (higher) or smoother (lower)
+displayed += (value - displayed) * lerpFactor;
+if (Math.abs(value - displayed) < 0.01) displayed = value;
+_gaugeState[canvasId] = displayed;
+
+// Colored arc (use displayed value)
+const valueAngle = startAngle + (totalAngle * Math.min(displayed, maxValue) / maxValue);
 ctx.beginPath();
 ctx.arc(
     centerX, 
@@ -606,30 +803,51 @@ if (speedElement && fuelElement) {
     const speedText = speedElement.textContent;
     const fuelText = fuelElement.textContent;
     
-    const speed = parseInt(speedText) || 0;
-    const fuel = parseInt(fuelText) || 0;
-    
-    // Draw gauges
+    // Prefer authoritative values from game state when available
+        const speedFromGame = (myGame && typeof myGame.forwardSpeed === 'number') ? Math.round(myGame.forwardSpeed * 100) : null;
+    const fuelFromGame = (myGame && myGame.stats && typeof myGame.stats.fuel === 'number') ? Math.round(myGame.stats.fuel) : null;
+    const altitudeFromGame = (myGame && myGame.plane && myGame.plane.position && typeof myGame.plane.position.y === 'number') ? Math.max(0, Math.round(myGame.plane.position.y)) : null;
+
+    const speed = (speedFromGame !== null) ? speedFromGame : (parseInt(speedText) || 0);
+    const fuel = (fuelFromGame !== null) ? fuelFromGame : (parseInt(fuelText) || 0);
+    const altitudeRaw = (altitudeFromGame !== null) ? altitudeFromGame : Math.round(speed * 0.8);
+
+    // Debug: throttle logs to once per second to avoid spamming the console
+    try {
+        const now = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+        if (now - _lastGaugeLog > 1000) {
+            console.debug('[gauges] speedFromGame:', speedFromGame, 'speed:', speed, 'fuelFromGame:', fuelFromGame, 'fuel:', fuel, 'altitudeFromGame:', altitudeFromGame, 'altitudeRaw:', altitudeRaw, '_gaugeState.speedGauge:', _gaugeState['speedGauge']);
+            _lastGaugeLog = now;
+        }
+    } catch (e) {}
+
+    // Map altitude (meters) to gauge 0-250 range (adjust scale as needed)
+    const altitudeMapped = Math.round(Math.min(250, (altitudeRaw / 1000) * 250));
+
+    // Draw gauges (altitude uses the mapped value)
     drawGauge('speedGauge', speed, 300, '#00ff88', 'Speed');
-    drawGauge('altitudeGauge', speed * 0.8, 250, '#4a9eff', 'Altitude');
+    drawGauge('altitudeGauge', altitudeMapped, 250, '#4a9eff', 'Altitude');
     drawGauge('fuelGaugeCanvas', fuel, 100, '#ffaa00', 'Fuel');
     
     // Update digital speed display
-    const speedGaugeValue = document.getElementById('speedGaugeValue');
-    if (speedGaugeValue) {
-        speedGaugeValue.textContent = Math.round(speed);
+    // Update center numeric (speedLarge) and gear overlay
+    const speedLargeEl = document.getElementById('speedLarge');
+    const gearLargeEl = document.getElementById('gearLarge');
+    if (speedLargeEl) {
+            const disp = (typeof _gaugeState['speedGauge'] === 'number') ? Math.round(_gaugeState['speedGauge']) : Math.round(speed);
+            if (disp === 0) speedLargeEl.textContent = '';
+            else speedLargeEl.textContent = disp;
     }
-    
-    // Update gear display based on speed
-    const gearDisplay = document.getElementById('gearDisplay');
-    if (gearDisplay) {
-        if (speed === 0) gearDisplay.textContent = 'N';
-        else if (speed < 50) gearDisplay.textContent = '1';
-        else if (speed < 100) gearDisplay.textContent = '2';
-        else if (speed < 150) gearDisplay.textContent = '3';
-        else if (speed < 200) gearDisplay.textContent = '4';
-        else if (speed < 250) gearDisplay.textContent = '5';
-        else gearDisplay.textContent = '6';
+    if (gearLargeEl) {
+            const gs = (typeof _gaugeState['speedGauge'] === 'number') ? Math.round(_gaugeState['speedGauge']) : speed;
+            if (gs === 0) {
+                gearLargeEl.textContent = '';
+            } else if (gs < 50) gearLargeEl.textContent = '1';
+            else if (gs < 100) gearLargeEl.textContent = '2';
+            else if (gs < 150) gearLargeEl.textContent = '3';
+            else if (gs < 200) gearLargeEl.textContent = '4';
+            else if (gs < 250) gearLargeEl.textContent = '5';
+            else gearLargeEl.textContent = '6';
     }
 }
 }
@@ -649,3 +867,80 @@ const fuelValue = document.getElementById('fuelValue');
 
 if (speedValue) observer.observe(speedValue, { childList: true, characterData: true, subtree: true });
 if (fuelValue) observer.observe(fuelValue, { childList: true, characterData: true, subtree: true });
+
+// Expose update function globally so the main game loop can call it each frame
+try { if (typeof window !== 'undefined') window.updateRacingGauges = updateRacingGauges; } catch (e) {}
+
+// --- Gauge settings (persisted) ---
+const _defaultGaugeSettings = {
+    speedSize: 1,
+    altSize: 1,
+    fuelSize: 1,
+    showSpeed: true,
+    showAlt: true,
+    showFuel: true
+};
+
+function loadGaugeSettings() {
+    try {
+        const json = localStorage.getItem('gaugeSettings');
+        if (!json) return Object.assign({}, _defaultGaugeSettings);
+        const parsed = JSON.parse(json);
+        return Object.assign({}, _defaultGaugeSettings, parsed);
+    } catch (e) { return Object.assign({}, _defaultGaugeSettings); }
+}
+
+function saveGaugeSettings(s) {
+    try { localStorage.setItem('gaugeSettings', JSON.stringify(s)); } catch (e) {}
+}
+
+function applyGaugeSettings(s) {
+    try {
+        const speedWrap = document.getElementById('speedGaugeWrapper');
+        const altWrap = document.getElementById('altitudeGaugeWrapper');
+        const fuelWrap = document.getElementById('fuelGaugeWrapper');
+        if (speedWrap) {
+            speedWrap.style.transform = `scale(${s.speedSize})`;
+            speedWrap.style.display = s.showSpeed ? '' : 'none';
+            speedWrap.style.transformOrigin = 'center center';
+        }
+        if (altWrap) {
+            altWrap.style.transform = `scale(${s.altSize})`;
+            altWrap.style.display = s.showAlt ? '' : 'none';
+            altWrap.style.transformOrigin = 'center center';
+        }
+        if (fuelWrap) {
+            fuelWrap.style.transform = `scale(${s.fuelSize})`;
+            fuelWrap.style.display = s.showFuel ? '' : 'none';
+            fuelWrap.style.transformOrigin = 'center center';
+        }
+    } catch (e) {}
+}
+
+function bindGaugeSettingsUI() {
+    try {
+        const toggle = document.getElementById('gaugeSettingsToggle');
+        const panel = document.getElementById('gaugeSettings');
+        const speedEl = document.getElementById('speedSize');
+        const altEl = document.getElementById('altSize');
+        const fuelEl = document.getElementById('fuelSize');
+        const showSpeed = document.getElementById('showSpeed');
+        const showAlt = document.getElementById('showAlt');
+        const showFuel = document.getElementById('showFuel');
+        const resetBtn = document.getElementById('gaugeReset');
+        if (!panel || !toggle) return;
+        toggle.addEventListener('click', () => { panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; });
+        const settings = loadGaugeSettings();
+        if (speedEl) { speedEl.value = settings.speedSize; speedEl.addEventListener('input', (e)=>{ settings.speedSize = parseFloat(e.target.value); applyGaugeSettings(settings); saveGaugeSettings(settings); }); }
+        if (altEl) { altEl.value = settings.altSize; altEl.addEventListener('input', (e)=>{ settings.altSize = parseFloat(e.target.value); applyGaugeSettings(settings); saveGaugeSettings(settings); }); }
+        if (fuelEl) { fuelEl.value = settings.fuelSize; fuelEl.addEventListener('input', (e)=>{ settings.fuelSize = parseFloat(e.target.value); applyGaugeSettings(settings); saveGaugeSettings(settings); }); }
+        if (showSpeed) { showSpeed.checked = settings.showSpeed; showSpeed.addEventListener('change',(e)=>{ settings.showSpeed = !!e.target.checked; applyGaugeSettings(settings); saveGaugeSettings(settings); }); }
+        if (showAlt) { showAlt.checked = settings.showAlt; showAlt.addEventListener('change',(e)=>{ settings.showAlt = !!e.target.checked; applyGaugeSettings(settings); saveGaugeSettings(settings); }); }
+        if (showFuel) { showFuel.checked = settings.showFuel; showFuel.addEventListener('change',(e)=>{ settings.showFuel = !!e.target.checked; applyGaugeSettings(settings); saveGaugeSettings(settings); }); }
+        if (resetBtn) resetBtn.addEventListener('click', ()=>{ const s = Object.assign({}, _defaultGaugeSettings); saveGaugeSettings(s); applyGaugeSettings(s); if (speedEl) speedEl.value = s.speedSize; if (altEl) altEl.value = s.altSize; if (fuelEl) fuelEl.value = s.fuelSize; if (showSpeed) showSpeed.checked = s.showSpeed; if (showAlt) showAlt.checked = s.showAlt; if (showFuel) showFuel.checked = s.showFuel; });
+        // apply initial
+        applyGaugeSettings(settings);
+    } catch (e) {}
+}
+
+try { window.addEventListener('load', bindGaugeSettingsUI); } catch (e) {}

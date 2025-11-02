@@ -1,11 +1,12 @@
 
-export function startStatsLoop(stats,statsInterval, notify, gameOver) {
-  stopStatsLoop(statsInterval); // stop previous interval if running
+export function startStatsLoop(stats, statsInterval, notify, gameOver) {
+  // Clear previous interval if a valid id was provided
+  try { if (statsInterval) clearInterval(statsInterval); } catch (e) {}
 
-  statsInterval = setInterval(() => {
+  const id = setInterval(() => {
     if (stats.fuel <= 0) {
-      stopStatsLoop();
-      gameOver();
+      try { clearInterval(id); } catch (e) {}
+      try { gameOver(); } catch (e) {}
       return;
     }
 
@@ -15,11 +16,13 @@ export function startStatsLoop(stats,statsInterval, notify, gameOver) {
 
     notify({ ...stats }); // send updated stats to UI
   }, 1000);
+
+  return id;
 }
 
 export function stopStatsLoop(statsInterval) {
-  if (statsInterval) clearInterval(statsInterval);
-  statsInterval = null;
+  try { if (statsInterval) clearInterval(statsInterval); } catch (e) {}
+  return null;
 }
 
 export function resetStatsLoop(stats,forwardSpeed) {
