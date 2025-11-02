@@ -187,6 +187,7 @@ const skipButton = document.getElementById('skipButton');
 
 if (skipButton) {
     skipButton.addEventListener('click', () => {
+        myGame.music.playButton();
         // Hide the dialogue popup
         const dlg = document.getElementById('dialogue-popup'); if (dlg) dlg.style.display = 'none';
         const gauges = document.getElementById('gauges'); if (gauges) gauges.style.display = 'flex';
@@ -325,6 +326,7 @@ window.addEventListener('load', () => {
     if (dialogueText) dialogueText.textContent = current.text;
 });
 if (nextButton) nextButton.addEventListener('click', () => {
+    myGame.music.playButton();
     currentDialogue++;
     
     if (currentDialogue < dialogues.length) {
@@ -340,6 +342,7 @@ if (nextButton) nextButton.addEventListener('click', () => {
             nextButton.textContent = "Start Takeoff!";
             nextButton.classList.add('start-button');
             nextButton.onclick = () => {
+                myGame.music.playButton();
                 const dlg = document.getElementById('dialogue-popup'); if (dlg) dlg.style.display = 'none';
                 const gauges = document.getElementById('gauges'); if (gauges) gauges.style.display = 'flex';
                 // Start immediately; ascend prompts come from HUD.startAscendSequence
@@ -627,6 +630,7 @@ if (restartWinButton) {
     restartWinButton.addEventListener('click', () => {
         myGame.music.playButton();
         if (winPopup) winPopup.style.display = 'none';
+        start(myGame);
     });
 }
 
@@ -651,9 +655,7 @@ if (restartLoseButton) {
     restartLoseButton.addEventListener('click', () => {
         myGame.music.playButton();
         if (losePopup) losePopup.style.display = 'none';
-        // startCountdown(() => {
-        //     start(myGame);
-        // });
+        start(myGame);
     });
 }
 

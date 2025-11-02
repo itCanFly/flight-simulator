@@ -232,20 +232,22 @@ export function animate(game) {
             game.rotatingCircle.rotation.z += 0.02;
         }
 
-        // Update camera position based on mode
-        if (game.cameraMode === "thirdPerson") {
-            game.camera.position.x = game.plane.position.x - 10 * Math.sin(game.plane.rotation.y);
-            game.camera.position.z = game.plane.position.z - 10 * Math.cos(game.plane.rotation.y);
-            game.camera.position.y = game.plane.position.y + 6;
-        }
-        else if (game.cameraMode === "topView") {
-            // Top-down view
-            game.camera.position.x = game.plane.position.x - 3 * Math.sin(game.plane.rotation.z);
-            game.camera.position.y = game.plane.position.y + 12.5; // height above
-            game.camera.position.z = game.plane.position.z - 3 * Math.cos(game.plane.rotation.z);
-        }
+        // Update camera position based on mode (only if not crashing)
+        if (!game._isCrashing) {
+            if (game.cameraMode === "thirdPerson") {
+                game.camera.position.x = game.plane.position.x - 10 * Math.sin(game.plane.rotation.y);
+                game.camera.position.z = game.plane.position.z - 10 * Math.cos(game.plane.rotation.y);
+                game.camera.position.y = game.plane.position.y + 6;
+            }
+            else if (game.cameraMode === "topView") {
+                // Top-down view
+                game.camera.position.x = game.plane.position.x - 3 * Math.sin(game.plane.rotation.z);
+                game.camera.position.y = game.plane.position.y + 12.5; // height above
+                game.camera.position.z = game.plane.position.z - 3 * Math.cos(game.plane.rotation.z);
+            }
 
-        game.camera.lookAt(game.plane.position);
+            game.camera.lookAt(game.plane.position);
+        }
 
         game.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
         game.renderer.setScissorTest(false);

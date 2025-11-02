@@ -68,7 +68,7 @@ export class Game {
         this.hasTakenOff = false;
 
         // Audio warning system
-        this.FUEL_WARNING_THRESHOLD = 15; // Fuel percentage for warning
+        this.FUEL_WARNING_THRESHOLD = 10; // Fuel percentage for warning (plays audio at 10%)
         this.hasPlayedFuelWarning = false;
         this.hasPlayedAltitudeWarning = false;
 

@@ -25,6 +25,8 @@ export function spawnFuelCans(game) {
             onPickup: () => {
                 game.stats.fuel = Math.min(100, game.stats.fuel + pickupAmount);
                 try { HUD.showFuelPickup(pickupAmount); } catch (e) {}
+                // Play refuel sound when fuel tank is acquired
+                try { game.music.playRefuel(); } catch (e) {}
             }
         });
 
