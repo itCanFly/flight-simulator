@@ -8,7 +8,7 @@ import { updateClouds } from '../clouds/clouds.js';
 import { handleCheckpoints } from '../scene/checkpoints.js';
 import { renderRadar } from '../scene/radarCamera.js';
 import { updateExplosion, triggerExplosion, resetExplosion } from '../shaders/explosion.js';
-
+import { createRain } from '../scene/setup.js';
 function notify(game) {
         game.listeners.forEach(cb => cb(game));
     }
@@ -179,8 +179,15 @@ export function animate(game) {
         // console.log(game.level);
         if (!game.isAnimating) return;
         requestAnimationFrame(() => animate(game));
-
-        // Get delta time for smooth animations
+            if (game.level === 3 && !game.rainEffect) {
+            game.rainEffect = createRain(game.scene, {
+                count: 15000,
+                speed: 0.3,
+                area: 1000,
+                height: 500
+            });
+        }
+                // Get delta time for smooth animations
         const deltaTime = game.clock.getDelta();
 
         for (const can of game.fuelCans) {
