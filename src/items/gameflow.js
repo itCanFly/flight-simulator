@@ -222,30 +222,27 @@ export function animate(game) {
 
         if (game.updateExhausts) game.updateExhausts();
         
-        // Update explosion animation
-        updateExplosion();
+        // Update explosion animation only if active
+        if (game._isCrashing) {
+            updateExplosion();
+        }
         
         // Rotate the circle
         if (game.rotatingCircle) {
             game.rotatingCircle.rotation.z += 0.02;
         }
 
-        game.camera.position.x = game.plane.position.x - 10 * Math.sin(game.plane.rotation.y);
-        game.camera.position.z = game.plane.position.z - 10 * Math.cos(game.plane.rotation.y);
-        game.camera.position.y = game.plane.position.y + 6;
-        
+        // Update camera position based on mode
         if (game.cameraMode === "thirdPerson") {
             game.camera.position.x = game.plane.position.x - 10 * Math.sin(game.plane.rotation.y);
             game.camera.position.z = game.plane.position.z - 10 * Math.cos(game.plane.rotation.y);
             game.camera.position.y = game.plane.position.y + 6;
-            
         }
         else if (game.cameraMode === "topView") {
-        // First-person (inside the plane)
-            game.camera.position.x = game.plane.position.x - 3 * Math.sin(game.plane.rotation.z) ;
+            // Top-down view
+            game.camera.position.x = game.plane.position.x - 3 * Math.sin(game.plane.rotation.z);
             game.camera.position.y = game.plane.position.y + 12.5; // height above
             game.camera.position.z = game.plane.position.z - 3 * Math.cos(game.plane.rotation.z);
-            
         }
 
         game.camera.lookAt(game.plane.position);
@@ -257,10 +254,16 @@ export function animate(game) {
 
         // shakeCamera(this.camera,0.25);
         game.renderer.render(game.scene, game.camera);
+        
+        // Render radar view
         renderRadar(game);
 
-    // Update UI gauges each frame (if available) for responsive needles
-    try { if (typeof window !== 'undefined' && typeof window.updateRacingGauges === 'function') window.updateRacingGauges(); } catch (e) {}
+    // Update UI gauges periodically instead of every frame (performance optimization)
+    if (!game._lastGaugeUpdate) game._lastGaugeUpdate = 0;
+    if (game.clock.elapsedTime - game._lastGaugeUpdate > 0.05) { // Update every 50ms instead of every frame
+        try { if (typeof window !== 'undefined' && typeof window.updateRacingGauges === 'function') window.updateRacingGauges(); } catch (e) {}
+        game._lastGaugeUpdate = game.clock.elapsedTime;
+    }
 
         if (game.state === "PLAYING") {
             const currentTime = game.clock.getElapsedTime();
@@ -283,18 +286,25 @@ export function animate(game) {
             } catch (e) {}
         }
 
+        // Cache DOM elements for better performance (query once, not every frame)
+        if (!game._cachedElements) {
+            game._cachedElements = {
+                finalScore: document.getElementById('finalScore'),
+                gameScore: document.getElementById('gameScore'),
+                speedValue: document.getElementById('speedValue')
+            };
+        }
+        
+        // Update score displays
         try {
-            const finalScoreEl = document.getElementById('finalScore');
-            if (finalScoreEl) finalScoreEl.innerText = `Score: ${game.score}`;
+            if (game._cachedElements.finalScore) game._cachedElements.finalScore.innerText = `Score: ${game.score}`;
         } catch (e) {}
         try {
-            const gameScoreEl = document.getElementById('gameScore');
-            if (gameScoreEl) gameScoreEl.innerText = `${game.score}`;
+            if (game._cachedElements.gameScore) game._cachedElements.gameScore.innerText = `${game.score}`;
         } catch (e) {}
-        // try updating speed display if present
+        // Update speed display
         try {
-            const speedEl = document.getElementById('speedValue');
-            if (speedEl) speedEl.innerText = `${(game.forwardSpeed.toFixed(3) * 100).toFixed(0)} km/h`;
+            if (game._cachedElements.speedValue) game._cachedElements.speedValue.innerText = `${(game.forwardSpeed.toFixed(3) * 100).toFixed(0)} km/h`;
         } catch (e) {}
 
 

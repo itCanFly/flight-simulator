@@ -4,10 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
        <link rel="stylesheet" href="./index.css">
+       <link rel="stylesheet" href="../src/styles/uiManager.css">
     <title>flight-simulator</title>
   </head>
   <body>
     <div id="gameContainer">
+        <!-- Loading Screen for Assets (matches index.html style) -->
+        <div id="assetLoadingScreen">
+            <div class="loading-text">Loading Assets</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="assetProgressBar"></div>
+            </div>
+        </div>
+        
         <!-- (old countdown overlay removed — HUD ascend countdown is used instead) -->
         <!-- Game Screen -->
         <div id="gameScreen">

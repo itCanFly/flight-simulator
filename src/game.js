@@ -114,13 +114,23 @@ export class Game {
 
         // Ground model 
         this.ground = null;
-        // load skybox (non-blocking)
-        try { loadSkybox(this.scene); } catch (e) { console.warn('loadSkybox call failed', e); }
+        
+        // Asset loading promises - store them for async loading
+        this.loadingPromises = [];
+        
+        // load skybox (return promise)
+        try { 
+            this.loadingPromises.push(loadSkybox(this.scene)); 
+        } catch (e) { 
+            console.warn('loadSkybox call failed', e); 
+        }
+        
         // load external ground model (adds to this.scene and sets this.ground when ready)
-        loadGroundModel(this);
+        this.loadingPromises.push(loadGroundModel(this));
+        
         // load runway and place it on top of the ground at the requested coordinates
         // Coordinates: x=1800, y=1, z=-1200
-        loadRunwayModel(this, new THREE.Vector3(1800, 1, -1200));
+        this.loadingPromises.push(loadRunwayModel(this, new THREE.Vector3(1800, 1, -1200)));
 
         // Clouds & Arrows
         // this.cloudGroup = createClouds(this.scene, this.sunLight);
@@ -152,6 +162,35 @@ export class Game {
     getFormattedTime() {
         getFormatted(this.stats);
     }
+    
+    // Asset Loading System
+    async waitForAssets() {
+        console.log('🎮 Loading game assets...');
+        
+        // Update progress bar during loading
+        const progressBar = document.getElementById('assetProgressBar');
+        
+        try {
+            // Simulate loading progress for better visual feedback
+            if (progressBar) progressBar.style.width = '30%';
+            
+            await Promise.all(this.loadingPromises);
+            
+            if (progressBar) progressBar.style.width = '80%';
+            
+            console.log('✅ All assets loaded successfully!');
+            console.log(`📦 Scene has ${this.scene.children.length} objects`);
+            
+            // Pre-render the scene once to ensure everything is visible
+            this.renderer.render(this.scene, this.camera);
+            
+            return true;
+        } catch (error) {
+            console.error('❌ Error loading assets:', error);
+            return false;
+        }
+    }
+    
     // Listener System
     onChange(callback) {
         this.listeners.push(callback);

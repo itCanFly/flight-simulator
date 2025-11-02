@@ -88,11 +88,52 @@ function _bindTouchControls() {
 
 // Bind after DOM ready
 try { window.addEventListener('load', _bindTouchControls); } catch (e) {}
-// Screen elements
-myGame.music.playButton();
-start(myGame);
-// Ensure on-screen gauges are visible when gameplay begins (fade-in)
-try { const gaugesEl = document.getElementById('gauges'); if (gaugesEl) { gaugesEl.style.display = 'flex'; gaugesEl.classList.add('visible'); } } catch (e) {}
+
+// -----------------
+// Asset Loading & Game Initialization
+// -----------------
+(async () => {
+    console.log('🎮 Initializing flight simulator...');
+    
+    // Get loading screen elements (matching index.html style)
+    const loadingScreen = document.getElementById('assetLoadingScreen');
+    const progressBar = document.getElementById('assetProgressBar');
+    
+    // Start with some initial progress
+    if (progressBar) progressBar.style.width = '10%';
+    
+    // Wait for all assets to load before starting the game
+    const assetsLoaded = await myGame.waitForAssets();
+    
+    // Update progress to show completion
+    if (progressBar) progressBar.style.width = '100%';
+    
+    if (!assetsLoaded) {
+        console.error('❌ Failed to load game assets. Game may not work correctly.');
+    }
+    
+    // Position camera to show the loaded scene before game starts
+    myGame.camera.position.set(1800, 50, -850);
+    myGame.camera.lookAt(1800, 1, -1100);
+    
+    // Render the scene once more to show everything is ready
+    myGame.renderer.render(myGame.scene, myGame.camera);
+    
+    // Wait a moment to show the completed loading bar, then hide loading screen
+    setTimeout(() => {
+        if (loadingScreen) loadingScreen.classList.add('hidden');
+        
+        console.log('🚀 Starting game...');
+        
+        // Screen elements
+        myGame.music.playButton();
+        start(myGame);
+
+        // Ensure on-screen gauges are visible when gameplay begins (fade-in)
+        try { const gaugesEl = document.getElementById('gauges'); if (gaugesEl) { gaugesEl.style.display = 'flex'; gaugesEl.classList.add('visible'); } } catch (e) {}
+    }, 800); // Increased from 500ms to 800ms so you can see it
+})();
+
 myGame.level = localStorage.getItem('selectedLevel');
 var dialogues = [
             
