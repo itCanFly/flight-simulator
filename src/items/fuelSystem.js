@@ -1,22 +1,21 @@
 import * as THREE from 'three';
 import { createFuelCan } from '../fuelTank.js';
+import { getWaypointsForLevel } from '../scene/waypoints.js';
 import { HUD } from '../ui/hud.js';
 
 export function spawnFuelCans(game) {
     const { scene, fuelCans } = game;
-    const waypoints = [
-                new THREE.Vector3(1800, 0.995, -800),
-                new THREE.Vector3(1742, 92, -236),
-                new THREE.Vector3(-125.611, 365.464, -558.506),
-                new THREE.Vector3(-1706.841, 294.921, -2033.331)
-            ];
+    const waypoints = getWaypointsForLevel(game.level);
+
     fuelCans.forEach(c => scene.remove(c.group));
     game.fuelCans = [];
 
-    for (let i = 0; i < waypoints.length - 1; i++) {
-        const start = waypoints[i];
-        const end = waypoints[i + 1];
-        const pos = new THREE.Vector3().lerpVectors(start, end, 0.5);
+    const curve = new THREE.CatmullRomCurve3(waypoints, false, 'catmullrom', 0.2);
+    const numCans = 5 - game.level ;
+
+    for (let i = 1; i <= numCans; i++) {
+        const t = i / (numCans + 1);
+        const pos = curve.getPoint(t);
         pos.y += 10;
 
         const pickupAmount = 15;

@@ -1,4 +1,4 @@
-import { checkWaypointReached } from "../scene/waypoints";
+//import { checkWaypointReached } from "../scene/waypoints";
 import { checkGroundCollision } from "../systems/safety";
 import { HUD } from '../ui/hud.js';
 
@@ -29,7 +29,7 @@ export function setupControls(game) {
     window.addEventListener("keyup", (e) => {
         if (e.code in game.keys) {
             game.keys[e.code] = false;
-            game.stats.fuel -= 2;
+            game.stats.fuel -= 1;
         }
     });
 }
@@ -47,6 +47,7 @@ export function updateControls(game) {
     const maxSpeed = 3.0;
     if (keys.KeyW) {
         game.targetForwardSpeed = Math.min(game.targetForwardSpeed + 0.02, maxSpeed);
+        game.stats.fuel -= 0.05;
     }
     if (keys.KeyS) {
         game.targetForwardSpeed = Math.max(game.targetForwardSpeed - 0.02, game.minForwardSpeed);
@@ -84,7 +85,7 @@ export function updateControls(game) {
     game.plane.translateZ(game.forwardSpeed);
 
      // Waypoint check
-    checkWaypointReached(game);
+    //checkWaypointReached(game);
         // Ground collision
     const hasCollided = checkGroundCollision(game);
 

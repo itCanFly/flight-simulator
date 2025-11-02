@@ -1,6 +1,5 @@
 import { spawnFuelCans } from '../items/fuelSystem.js';
 import { spawnExhausts } from '../items/exhaustSystem.js';
-import { createRotatingCircle, createArrows, waypoints, distanceFromSegment } from '../scene/waypoints.js';
 import { handleAltitude, handleFuelWarning, handleGroundCollision, hideAltitudeWarning, handleDescentWarnings, handleProximityWarnings } from '../systems/safety.js';
 import { HUD } from '../ui/hud.js';
 import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from '../scene/stats.js';
@@ -72,7 +71,7 @@ export function start(game) {
     game.forwardSpeed = game.minForwardSpeed; 
     game.currentWaypointIndex = 0;
 
-    game.arrows = createArrows(game.scene, game.waypoints);
+    // game.arrows = createArrows(game.scene, game.waypoints);
 
     // Initialize HUD early so pickups and prompts can immediately use it
     try { HUD.init(game); } catch (e) {}
