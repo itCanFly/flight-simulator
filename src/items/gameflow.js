@@ -8,7 +8,7 @@ import { updateClouds } from '../clouds/clouds.js';
 import { handleCheckpoints } from '../scene/checkpoints.js';
 import { renderRadar } from '../scene/radarCamera.js';
 import { updateExplosion, triggerExplosion, resetExplosion } from '../shaders/explosion.js';
-
+import { createRain } from '../scene/setup.js';
 function notify(game) {
         game.listeners.forEach(cb => cb(game));
     }
@@ -179,8 +179,15 @@ export function animate(game) {
         // console.log(game.level);
         if (!game.isAnimating) return;
         requestAnimationFrame(() => animate(game));
-
-        // Get delta time for smooth animations
+            if (game.level === 3 && !game.rainEffect) {
+            game.rainEffect = createRain(game.scene, {
+                count: 15000,
+                speed: 0.3,
+                area: 1000,
+                height: 500
+            });
+        }
+                // Get delta time for smooth animations
         const deltaTime = game.clock.getDelta();
 
         for (const can of game.fuelCans) {
@@ -234,8 +241,8 @@ export function animate(game) {
         // Update camera position based on mode (only if not crashing)
         if (!game._isCrashing) {
             if (game.cameraMode === "thirdPerson") {
-                game.camera.position.x = game.plane.position.x - 10 * Math.sin(game.plane.rotation.y);
-                game.camera.position.z = game.plane.position.z - 10 * Math.cos(game.plane.rotation.y);
+                game.camera.position.x = game.plane.position.x - 5 * Math.sin(game.plane.rotation.y);
+                game.camera.position.z = game.plane.position.z - 5 * Math.cos(game.plane.rotation.y);
                 game.camera.position.y = game.plane.position.y + 6;
             }
             else if (game.cameraMode === "topView") {

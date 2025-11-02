@@ -13,12 +13,12 @@ import { createRadarCamera } from './scene/radarCamera.js';
 import { setupExplosion, updateExplosion } from './shaders/explosion.js';
 
 export class Game {
-    constructor(containerId) {
+    constructor(containerId,level) {
         // -----------------
         // Core Game State
         // -----------------
         this.state = 'MENU';
-        this.level = 1;
+        this.level = level;
         this.score = 0;
         this.listeners = [];
 
@@ -45,7 +45,7 @@ export class Game {
 
         // Rotating circle
         this.rotatingCircle = null;
-
+        this.rainEffect = null;
         // Stats
         this.stats={
             speed : 90,
@@ -91,11 +91,11 @@ export class Game {
     this.tipInterval = 22; // seconds between contextual tips
 
         // Scene Setup
-        this.scene = setupScene();
+        this.scene = setupScene(level);
          //this.scene.add(loadGroundModel(this));
-        this.sunLight = setupLighting(this.scene);
+        this.sunLight = setupLighting(this.scene,level);
         this.renderer = setupRenderer(containerId);
-        this.camera = setupCamera();
+        this.camera = setupCamera(level);
         this.scene.add(this.sunLight);
        
         // Plane Setup

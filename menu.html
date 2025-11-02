@@ -805,7 +805,7 @@
             <h1 class="hero-title">FLYING METRO BOS</h1>
             <p class="hero-subtitle">Take to the skies</p>
         </div>
-        <script type="module" src="../src/menuMain.js"></script>
+        <script type="module" src="./src/menuMain.js"></script>
     </section>
 
     <!-- Audio Settings Popup -->
@@ -1134,6 +1134,7 @@
                     const level = levelText.replace('Level ', ''); // Extract the number (e.g. "1", "2", "3")
 
                     // Store the level in localStorage
+                    console.log(level)
                     localStorage.setItem('selectedLevel', level);
 
                     // Redirect to gameplay page
