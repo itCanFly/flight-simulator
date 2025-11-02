@@ -155,6 +155,7 @@ myGame.level = localStorage.getItem('selectedLevel');
 const MISSIONS = {
     "1": {
         objective: "Transport cargo from OR Tambo International Airport to Cape Town International Airport. You're carrying 47 boxes of wigs, hot sauce, and one precious disco ball. Handle with care!",
+        instructions: "HOW TO PASS: Navigate through all waypoints (blue markers) in sequence. Maintain safe altitude and avoid crashing. Collect fuel tanks if needed. Reach the final checkpoint to complete the mission successfully.",
         dialogue: [
             {
                 character: "Mr Ingram",
@@ -202,6 +203,7 @@ const MISSIONS = {
     },
     "2": {
         objective: "Fly to Durban with DOUBLE the cargo and THREE disco balls! Navigate through storm clouds and deliver the wigs safely. The disco balls are counting on you!",
+        instructions: "HOW TO PASS: Follow the waypoint route carefully. Watch your altitude - don't fly too high or too low. Manage your fuel consumption. Complete all checkpoints without crashing to win.",
         dialogue: [
             {
                 character: "Mr Ingram",
@@ -255,6 +257,7 @@ const MISSIONS = {
     },
     "3": {
         objective: "International flight to Madagascar! Transport 100 boxes, FIVE disco balls, and a live flamingo named Gerald. This is your final test - make it count!",
+        instructions: "HOW TO PASS: This is the hardest level! Navigate all waypoints precisely. Keep Gerald comfortable - maintain steady flight. Monitor fuel levels closely. Avoid altitude warnings and reach the final checkpoint safely.",
         dialogue: [
             {
                 character: "Mr Ingram",
@@ -343,6 +346,10 @@ function initMissionBriefing() {
     // Set objective
     const objectiveText = document.getElementById('missionObjectiveText');
     if (objectiveText) objectiveText.textContent = mission.objective;
+
+    // Set instructions
+    const instructionsText = document.getElementById('missionInstructionsText');
+    if (instructionsText) instructionsText.textContent = mission.instructions;
 
     // Build dialogue content
     const dialogueContent = document.getElementById('dialogueContent');

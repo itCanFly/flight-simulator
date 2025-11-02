@@ -117,6 +117,32 @@
     font-weight: 500;
 }
 
+.mission-instructions {
+    background: linear-gradient(180deg, rgba(52,211,153,0.08), rgba(16,185,129,0.05));
+    border-left: 4px solid #34d399;
+    padding: 20px 24px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.4);
+}
+
+.mission-instructions h2 {
+    color: #34d399;
+    font-size: 1.4rem;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.mission-instructions p {
+    color: #e2e8f0;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin: 0;
+    font-weight: 500;
+}
+
 .mission-dialogue-section {
     margin-bottom: 8px;
 }
