@@ -620,10 +620,15 @@ myGame.onChange((game) => {
 if (nextWinLevelButton) {
     nextWinLevelButton.addEventListener('click', () => {
         myGame.music.playButton();
-        if (winPopup) winPopup.style.display = 'none';
+        myGame.music.playButton();
+        cancelScheduledGameOver();
+        if (gameOverPopup) gameOverPopup.style.display = 'none';
         myGame.level++;
-        const lvlInfo = document.getElementById('levelInfo'); if (lvlInfo) lvlInfo.textContent = `Level: ${myGame.level}`;
-        start(myGame);
+        // savedLevel++;
+        console.log(myGame.level)
+        localStorage.setItem('selectedLevel', myGame.level);
+        // Redirect to the gameplay page
+        window.location.href = '/gameplay.html';
     });
 }
 
@@ -655,6 +660,7 @@ if (quitWinButton) {
 if (restartLoseButton) {
     restartLoseButton.addEventListener('click', () => {
         myGame.music.playButton();
+        console.log("restarting losing....");
         if (losePopup) losePopup.style.display = 'none';
         start(myGame);
     });

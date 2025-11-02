@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { win, lose } from '../items/gameflow';
+import { win, gameOver } from '../items/gameflow';
 import { getWaypointsForLevel } from './waypoints';
 import { HUD } from '../ui/hud.js';
 
@@ -60,7 +60,7 @@ export function createBracketPair(position, color = 0x0a3766) {
 
 export function createCheckpoints(level, scene) {
     const checkpoints = [];
-            
+    level = 1;
     const waypoints = getWaypointsForLevel(level);
 
     const curve = new THREE.CatmullRomCurve3(waypoints, false, 'catmullrom', 0.2);
@@ -140,7 +140,7 @@ export function handleCheckpoints(game) {
             win(game);
         }
         else{
-            lose(game);
+            gameOver(game);
         }
     }
 
