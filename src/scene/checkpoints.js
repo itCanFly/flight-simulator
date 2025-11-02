@@ -143,7 +143,7 @@ export function handleCheckpoints(game) {
         game.currCheckpointIndex++;
 
         if (game.currCheckpointIndex >= game.checkpoints.length) {
-            console.log("🏁 Level Complete!");
+            console.log("Level Complete!");
             gameOver(game);
         }
     }

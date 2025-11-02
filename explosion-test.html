@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explosion Test</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 100;
+        }
+        button {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            width: 100%;
+        }
+        button:hover {
+            background: #ff6666;
+        }
+        #status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .loaded {
+            color: #4f4;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h2>🔥 Explosion Test</h2>
+        <button id="triggerBtn" disabled>Trigger Explosion</button>
+        <button id="resetBtn">Reset Explosion</button>
+        <div id="status">Loading textures...</div>
+    </div>
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 5, 15);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Add lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 10, 5);
+        scene.add(directionalLight);
+
+        // Add a simple plane (bus model substitute)
+        const planeGeometry = new THREE.BoxGeometry(3, 1, 5);
+        const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x3498db });
+        const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+        planeMesh.position.set(0, 0, 0);
+        scene.add(planeMesh);
+
+        // Add ground plane
+        const groundGeometry = new THREE.PlaneGeometry(50, 50);
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -2;
+        scene.add(ground);
+
+        // Add grid helper
+        const gridHelper = new THREE.GridHelper(50, 50);
+        gridHelper.position.y = -1.9;
+        scene.add(gridHelper);
+
+        // Explosion system
+        let fireMesh, groundMesh;
+        let explosionFrames = [];
+        let groundExplosionFrames = [];
+        let totalFrames = 60; // explosion0001.png to explosion0060.png
+        let totalGroundFrames = 100; // GroundExploded0001.png to GroundExploded0100.png
+        let allLoaded = false;
+        let isExploding = false;
+        let startTime = 0;
+        const duration = 5000;
+
+        async function setupExplosion() {
+            const loader = new THREE.TextureLoader();
+            const fireGeo = new THREE.PlaneGeometry(20, 20); // Much larger to engulf objects
+            const groundGeo = new THREE.PlaneGeometry(25, 15); // Larger ground explosion
+
+            const fireMat = new THREE.MeshBasicMaterial({
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                side: THREE.DoubleSide,
+                opacity: 1.2, // Extra brightness
+            });
+
+            const groundMat = new THREE.MeshBasicMaterial({
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                opacity: 1.2, // Extra brightness
+            });
+
+            fireMesh = new THREE.Mesh(fireGeo, fireMat);
+            groundMesh = new THREE.Mesh(groundGeo, groundMat);
+            groundMesh.rotation.x = -Math.PI / 2;
+            groundMesh.position.y = -1.8;
+
+            fireMesh.visible = false;
+            groundMesh.visible = false;
+            scene.add(fireMesh);
+            scene.add(groundMesh);
+
+            await preloadExplosionFrames(loader);
+        }
+
+        async function preloadExplosionFrames(loader) {
+            const promises = [];
+            let loadedCount = 0;
+            const totalTextures = totalFrames + totalGroundFrames;
+
+            // Load fire explosion frames: explosion0001.png to explosion0060.png
+            for (let i = 1; i <= totalFrames; i++) {
+                const num = i.toString().padStart(4, "0");
+                const url = `public/assets/textures/Explosion 1/Explosion 1/explosion${num}.png`;
+                promises.push(
+                    new Promise((resolve, reject) => {
+                        loader.load(
+                            url,
+                            (tex) => {
+                                tex.colorSpace = THREE.SRGBColorSpace;
+                                explosionFrames[i - 1] = tex; // Store at index 0..59
+                                loadedCount++;
+                                updateStatus(`Loading textures... ${loadedCount}/${totalTextures}`);
+                                resolve();
+                            },
+                            undefined,
+                            (error) => {
+                                console.error(`Failed to load ${url}:`, error);
+                                resolve(); // Continue even if one fails
+                            }
+                        );
+                    })
+                );
+            }
+
+            // Load ground explosion frames: GroundExploded0001.png to GroundExploded0100.png
+            for (let i = 1; i <= totalGroundFrames; i++) {
+                const num = i.toString().padStart(4, "0");
+                const url = `public/assets/textures/Ground Exploded/Ground Exploded/GroundExploded${num}.png`;
+                promises.push(
+                    new Promise((resolve, reject) => {
+                        loader.load(
+                            url,
+                            (tex) => {
+                                tex.colorSpace = THREE.SRGBColorSpace;
+                                groundExplosionFrames[i - 1] = tex; // Store at index 0..99
+                                loadedCount++;
+                                updateStatus(`Loading textures... ${loadedCount}/${totalTextures}`);
+                                resolve();
+                            },
+                            undefined,
+                            (error) => {
+                                console.error(`Failed to load ${url}:`, error);
+                                resolve(); // Continue even if one fails
+                            }
+                        );
+                    })
+                );
+            }
+
+            await Promise.all(promises);
+            allLoaded = true;
+            updateStatus('✓ All textures loaded! Click button to test.', true);
+            document.getElementById('triggerBtn').disabled = false;
+            console.log("✓ Explosion textures loaded successfully");
+        }
+
+        function triggerExplosion(position = new THREE.Vector3(0, 0, 0)) {
+            if (!allLoaded || !fireMesh || !groundMesh) {
+                console.warn("Explosion system not ready!");
+                return;
+            }
+
+            fireMesh.position.copy(position);
+            groundMesh.position.set(position.x, -1.8, position.z);
+
+            fireMesh.visible = true;
+            groundMesh.visible = true;
+            isExploding = true;
+            startTime = performance.now();
+            console.log("🔥 Explosion triggered!");
+        }
+
+        function updateExplosion() {
+            if (!isExploding) return;
+
+            const t = (performance.now() - startTime) / duration;
+            if (t >= 1) {
+                isExploding = false;
+                fireMesh.visible = false;
+                groundMesh.visible = false;
+                console.log("Explosion complete");
+                return;
+            }
+
+            const frameIndex = Math.floor(t * (totalFrames - 1));
+            const groundFrameIndex = Math.floor(t * (totalGroundFrames - 1));
+
+            const tex = explosionFrames[frameIndex];
+            const groundTex = groundExplosionFrames[groundFrameIndex];
+            
+            if (tex) {
+                fireMesh.material.map = tex;
+                fireMesh.material.needsUpdate = true;
+            }
+            if (groundTex) {
+                groundMesh.material.map = groundTex;
+                groundMesh.material.needsUpdate = true;
+            }
+
+            // Billboard effect - always face camera
+            if (camera) {
+                fireMesh.quaternion.copy(camera.quaternion);
+            }
+
+            // Much larger scale to completely engulf objects
+            const baseScale = 15; // Start very large
+            const pulseScale = 8; // Big expansion wave
+            const scale = baseScale + Math.sin(t * Math.PI) * pulseScale;
+            fireMesh.scale.setScalar(scale);
+            
+            // Ground explosion also larger and more dynamic
+            const gBaseScale = 3;
+            const gPulse = 1.5;
+            const gScale = gBaseScale + Math.sin(t * Math.PI) * gPulse;
+            groundMesh.scale.set(gScale * 4, 1, gScale * 3);
+
+            // Enhanced color/brightness for more vibrant effect
+            const brightness = 1 + Math.sin(t * Math.PI * 2) * 0.3; // Pulsing brightness
+            fireMesh.material.opacity = Math.min(1.5, brightness);
+            groundMesh.material.opacity = Math.min(1.5, brightness * 0.8);
+        }
+
+        function resetExplosion() {
+            isExploding = false;
+            if (fireMesh) fireMesh.visible = false;
+            if (groundMesh) groundMesh.visible = false;
+            console.log("Explosion reset");
+        }
+
+        function updateStatus(message, loaded = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            if (loaded) {
+                status.classList.add('loaded');
+            }
+        }
+
+        // Button handlers
+        document.getElementById('triggerBtn').addEventListener('click', () => {
+            triggerExplosion(planeMesh.position.clone());
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            resetExplosion();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate camera around the scene
+            const time = Date.now() * 0.0005;
+            camera.position.x = Math.sin(time) * 20;
+            camera.position.z = Math.cos(time) * 20;
+            camera.lookAt(0, 0, 0);
+            
+            updateExplosion();
+            renderer.render(scene, camera);
+        }
+
+        // Initialize
+        setupExplosion().then(() => {
+            animate();
+        });
+    </script>
+</body>
+</html>

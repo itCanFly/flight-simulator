@@ -6,139 +6,189 @@
        <link rel="stylesheet" href="./index.css">
     <title>flight-simulator</title>
   </head>
-<style>
-
-</style>
-<body>
+  <body>
     <div id="gameContainer">
-        <!-- Countdown Overlay -->
-        <div id="countdownOverlay">
-            <div class="countdown-number" id="countdownNumber"></div>
-        </div>
-        
-        <!-- Loading Screen -->
-
-        <!-- Main Menu -->
-
-        <!-- Level Selection -->
-
+        <!-- (old countdown overlay removed — HUD ascend countdown is used instead) -->
         <!-- Game Screen -->
         <div id="gameScreen">
             <button class="back-button" id="backToLevelsButton">← Levels</button>
-            <div class="game-info">
-                <div id="levelInfo">Level:</div>
-                <div class="stat-row">
-                    <span class="stat-label">Speed:</span>
-                    <span class="stat-value speed-value" id="speedValue">0 km/h</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Fuel:</span>
-                    <span class="stat-value fuel-value" id="fuelValue">100%</span>
-                </div>
-                <div class="fuel-bar-container">
-                    <div class="fuel-bar-fill" id="fuelBar"></div>
-                </div>
-                <div class="stat-row" style="margin-top: 1rem;">
-                    <span class="stat-label">Score:</span>
-                    <span class="stat-value" id="gameScore">0</span>
-                </div>
-                <div class="stat-row" style="margin-top: 1rem;">
-                    <span class="stat-label">Time:</span>
-                    <span class="stat-value" id="timeValue">0:00</span>
-                </div>
-            </div>
-                        <!-- NEW RACING GAUGES (bottom center) -->
-            <div class="racing-gauges" id="gauges">
-                <!-- Altitude Gauge (Left) -->
-                <div class="gauge-wrapper">
-                    <canvas id="altitudeGauge" width="160" height="160" class="gauge-canvas"></canvas>
-                    <div class="gauge-label">Altitude</div>
-                </div>
-
-                <!-- Speed Gauge (Center - Large) -->
-                <div class="gauge-wrapper">
-                    <canvas id="speedGauge" width="220" height="220" class="gauge-canvas"></canvas>
-                    <div class="gauge-label">km/h</div>
-                    <div class="gauge-digital" id="speedGaugeValue">0</div>
-                    <div class="gear-display-gauge" id="gearDisplay">N</div>
-                </div>
-
-                <!-- Fuel Gauge (Right) -->
-                <div class="gauge-wrapper">
-                    <canvas id="fuelGaugeCanvas" width="160" height="160" class="gauge-canvas"></canvas>
-                    <div class="gauge-label">Fuel</div>
-                </div>
-            </div>
-            <div class="dialogue-popup" id="dialogue-popup">
-                <div class="character-section">
-                    <div class="character-avatar" id="characterAvatar"></div>
-                    <div class="character-name" id="characterName">Mr Ingram</div>
-                </div>
-                <div class="dialogue-content">
-                    <div class="dialogue-text" id="dialogueText">
-                        Hello there! You must be Json right?
-                    </div>
-                 <div class="button-container">
-                    <button class="skip-button" id="skipButton">Skip</button>
-                    <button class="next-button" id="nextButton">Next</button>
-                </div>
-                </div>
-            </div>
+        </div>
+        <!-- NOTE: Dialogue UI removed for now (was a temporary walkthrough). Re-add later if needed. -->
             <!-- Altitude Warning Display -->
             <div id="altitudeWarning" class="altitude-warning hidden">
                 <div class="warning-text">⚠️ ALTITUDE WARNING ⚠️</div>
                 <div class="warning-subtitle">DESCEND IMMEDIATELY</div>
             </div>
+
+            <!-- HUD / Temporary Messages -->
+            <div id="startMessage" class="hud-message start-message"></div>
+            <!-- Large centered ascend countdown / urgent prompt -->
+            <div id="ascendCountdown" class="hud-ascend-countdown hidden"></div>
+            <div id="ascendHint" class="hud-message ascend-hint">Ascend when ready</div>
+            <div id="offCourseWarning" class="hud-message offcourse hidden">OFF COURSE — Return to waypoint</div>
+            <div id="lowAltitudeWarning" class="hud-message low-alt hidden">WARNING: TOO LOW — Pull Up!</div>
+            <div id="fuelAlert" class="hud-message fuel-alert hidden">FUEL LOW: <span id="fuelPercent">30%</span></div>
+            <!-- Racing gauges: speed, altitude, fuel -->
+            <div id="gauges" class="gauges" style="display:none;">
+                <!-- Left: small altitude gauge -->
+                <div class="gauge small" id="altitudeGaugeWrapper">
+                    <canvas id="altitudeGauge" width="120" height="120"></canvas>
+                    <div class="gauge-value" id="altitudeValue"></div>
+                    <div class="gauge-label">ALTITUDE</div>
+                </div>
+
+                <!-- Center: large speed gauge -->
+                <div class="gauge center" id="speedGaugeWrapper">
+                    <canvas id="speedGauge" width="320" height="320"></canvas>
+                    <div class="center-display">
+                        <div class="speed-unit">KM/H</div>
+                        <!-- hidden numeric mirror used by the gauge update logic -->
+                        <div class="gauge-value" id="speedValue" style="display:none">0</div>
+                    </div>
+                    <div class="gauge-label">SPEED</div>
+                </div>
+
+                <!-- Right: medium fuel gauge (bigger) -->
+                <div class="gauge medium" id="fuelGaugeWrapper">
+                    <canvas id="fuelGaugeCanvas" width="160" height="160"></canvas>
+                    <div class="gauge-value" id="fuelValue"></div>
+                    <div class="gauge-label">FUEL</div>
+                </div>
+            </div>
+            
+            <!-- layer for animated points -->
+            <div id="pointsLayer" class="points-layer"></div>
+            
+            <!-- Touch controls (mobile) -->
+            <div id="touchControls" class="touch-controls" aria-hidden="true">
+                <button class="touch-button" data-key="KeyW" id="btnThrottleUp">▲</button>
+                <button class="touch-button" data-key="KeyS" id="btnThrottleDown">▼</button>
+                <button class="touch-button" data-key="ArrowLeft" id="btnLeft">◀</button>
+                <button class="touch-button" data-key="ArrowRight" id="btnRight">▶</button>
+                <button class="touch-button" data-key="ArrowUp" id="btnAscend">⤒</button>
+                <button class="touch-button" data-key="Space" id="btnPause">▮▮</button>
+            </div>
+
+            <!-- Gauge settings (adjust size & visibility) -->
+            <div id="gaugeSettingsToggle" class="gauge-settings-toggle">⚙️</div>
+            <div id="gaugeSettings" class="gauge-settings" aria-hidden="true">
+                <h4>Gauges</h4>
+                <label>Speed size <input id="speedSize" type="range" min="0.5" max="1.8" step="0.05" value="1"></label>
+                <label>Altitude size <input id="altSize" type="range" min="0.5" max="1.8" step="0.05" value="1"></label>
+                <label>Fuel size <input id="fuelSize" type="range" min="0.5" max="1.8" step="0.05" value="1"></label>
+                <div class="gauge-toggles">
+                    <label><input id="showSpeed" type="checkbox" checked> Speed</label>
+                    <label><input id="showAlt" type="checkbox" checked> Altitude</label>
+                    <label><input id="showFuel" type="checkbox" checked> Fuel</label>
+                </div>
+                <button id="gaugeReset" class="btn">Reset</button>
+            </div>
         </div>
-        <!-- Game Over Popup -->
+        <!-- Game Over Popup (cockpit-styled) -->
         <div id="gameOverPopup" class="popup">
-            <div class="popup-content">
-                <h2>Game Over</h2>
-                <p id="finalScore">Score: 0</p>
-                <div class="popup-buttons">
-                    <button id="quitButton">Quit</button>
-                    <button id="restartButton">Restart</button>
-                    <button id="nextLevelButton">Next Level</button>
+            <div class="gameover-panel">
+                <div class="panel-top">
+                    <div class="go-title">MISSION FAILED</div>
+                    <div class="go-sub">Flight terminated</div>
+                </div>
+
+                <div class="panel-body">
+                    <div class="summary">
+                        <div class="big-score" id="finalScore">Score: 0</div>
+                        <div class="details">
+                            <div>Flight Time: <span id="go-time">0:00</span></div>
+                            <div>Crash Altitude: <span id="go-crash-alt">--</span> m</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-actions">
+                    <button id="restartButton" class="btn btn-primary">Restart</button>
+                    <button id="nextLevelButton" class="btn btn-secondary">Next Level</button>
+                    <button id="quitButton" class="btn btn-ghost">Quit</button>
                 </div>
             </div>
         </div>
 
-        <!-- Pause Popup -->
+        <!-- Pause Popup (styled like Game Over) -->
         <div id="pausePopup" class="popup">
-            <div class="popup-content">
-                <h2>Game Paused</h2>
-                <div class="popup-buttons">
-                    <button id="resumeButton">Resume</button>
-                    <button id="restartPauseButton">Restart</button>
-                    <button id="quitPauseButton">Quit </button>
+            <div class="gameover-panel" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+                <div class="panel-top">
+                    <div class="go-title" id="pauseTitle">GAME PAUSED</div>
+                    <div class="go-sub">Take a break — resume when ready</div>
+                </div>
+
+                <div class="panel-body">
+                    <div class="summary">
+                        <div class="big-score">Paused</div>
+                        <div class="details">Return to the cockpit to continue your mission.</div>
+                    </div>
+                </div>
+
+                <div class="panel-actions">
+                    <button id="resumeButton" class="btn btn-primary">Resume</button>
+                    <button id="restartPauseButton" class="btn btn-secondary">Restart</button>
+                    <button id="quitPauseButton" class="btn btn-ghost">Quit</button>
                 </div>
             </div>
         </div>
 
-        <!-- Win Popup -->
+        <!-- Win Popup (consistent panel styling) -->
         <div id="winPopup" class="popup">
-        <div class="popup-content">
-            <h2> You Win!</h2>
-            <p id="winMessage">Congratulations! Level Complete!</p>
-            <div class="popup-buttons">
-            <button id="nextWinLevelButton">Next Level</button>
-            <button id="restartWinButton">Restart</button>
-            <button id="quitWinButton">Quit</button>
+            <div class="gameover-panel" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+                <div class="panel-top">
+                    <div class="go-title" id="winTitle">YOU WIN!</div>
+                    <div class="go-sub">Level complete — well flown</div>
+                </div>
+
+                <div class="panel-body">
+                    <div class="instruments">
+                        <div class="inst">
+                            <div class="inst-label">ALT</div>
+                            <div class="inst-value" id="win-alt">--</div>
+                        </div>
+                        <div class="inst">
+                            <div class="inst-label">SPD</div>
+                            <div class="inst-value" id="win-speed">--</div>
+                        </div>
+                        <div class="inst">
+                            <div class="inst-label">FUEL</div>
+                            <div class="inst-value" id="win-fuel">--</div>
+                        </div>
+                    </div>
+
+                    <div class="summary">
+                        <div class="big-score" id="winMessage">Congratulations! Level Complete!</div>
+                    </div>
+                </div>
+
+                <div class="panel-actions">
+                    <button id="nextWinLevelButton" class="btn btn-primary">Next Level</button>
+                    <button id="restartWinButton" class="btn btn-secondary">Restart</button>
+                    <button id="quitWinButton" class="btn btn-ghost">Quit</button>
+                </div>
             </div>
         </div>
-        </div>
 
-        <!-- Lose Popup -->
+        <!-- Lose Popup (consistent panel styling) -->
         <div id="losePopup" class="popup">
-        <div class="popup-content">
-            <h2>💀 You Lose!</h2>
-            <p id="loseMessage">Try again to beat this level!</p>
-            <div class="popup-buttons">
-            <button id="restartLoseButton">Restart</button>
-            <button id="quitLoseButton">Quit</button>
-            </div>
-        </div>
+            <div class="gameover-panel" role="dialog" aria-modal="true" aria-labelledby="loseTitle">
+                <div class="panel-top">
+                    <div class="go-title" id="loseTitle">YOU LOSE</div>
+                    <div class="go-sub">Mission failed — try again</div>
+                </div>
 
+                <div class="panel-body">
+                    <div class="summary">
+                        <div class="big-score" id="loseMessage">Try again to beat this level!</div>
+                    </div>
+                </div>
+
+                <div class="panel-actions">
+                    <button id="restartLoseButton" class="btn btn-primary">Restart</button>
+                    <button id="quitLoseButton" class="btn btn-ghost">Quit</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>

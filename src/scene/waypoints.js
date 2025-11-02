@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createStraightArrow } from '../arrow.js';
 import { win } from "../items/gameflow";
-const waypoints = [
+export const waypoints = [
             new THREE.Vector3(1800, 0.995, -800),
             new THREE.Vector3(1742, 92, -236),
             new THREE.Vector3(-125.611, 365.464, -558.506),
@@ -53,5 +53,18 @@ export function checkWaypointReached(game) {
                     game.scene.remove(passedArrow);
                 }
             }
+
+            // (no extra work here)
         }
     }
+
+// Compute shortest distance from point P to segment AB in 3D
+export function distanceFromSegment(point, a, b) {
+    const ab = new THREE.Vector3().subVectors(b, a);
+    const ap = new THREE.Vector3().subVectors(point, a);
+    const abLen2 = ab.lengthSq();
+    if (abLen2 === 0) return ap.length();
+    const t = Math.max(0, Math.min(1, ap.dot(ab) / abLen2));
+    const proj = new THREE.Vector3().copy(ab).multiplyScalar(t).add(a);
+    return proj.distanceTo(point);
+}

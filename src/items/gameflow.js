@@ -1,35 +1,67 @@
 import { spawnFuelCans } from '../items/fuelSystem.js';
 import { spawnExhausts } from '../items/exhaustSystem.js';
-import { createRotatingCircle, createArrows } from '../scene/waypoints.js';
-import { handleAltitude, handleFuelWarning, handleGroundCollision,hideAltitudeWarning } from '../systems/safety.js';
+import { createRotatingCircle, createArrows, waypoints, distanceFromSegment } from '../scene/waypoints.js';
+import { handleAltitude, handleFuelWarning, handleGroundCollision, hideAltitudeWarning, handleDescentWarnings, handleProximityWarnings } from '../systems/safety.js';
+import { HUD } from '../ui/hud.js';
 import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from '../scene/stats.js';
 import { setupControls, updateControls } from '../controls/controls.js';
 import { updateClouds } from '../clouds/clouds.js';
 import { handleCheckpoints } from '../scene/checkpoints.js';
-import { renderRadar } from '../scene/radarCamera.js'
+import { renderRadar } from '../scene/radarCamera.js';
+import { updateExplosion, triggerExplosion, resetExplosion } from '../shaders/explosion.js';
 
 function notify(game) {
         game.listeners.forEach(cb => cb(game));
     }
 
+// Interactive tips for the player (Flying Metro Bos flavor)
+const TIPS = [
+    'Maintain heading — align with the checkpoints to stay on course.',
+    'Check fuel regularly — grab fuel cans to top up.',
+    'Smooth inputs save fuel — avoid abrupt pitch changes.',
+    'Approach waypoints calmly — reduce roll when entering.',
+    'Wind gusts may push you off course — correct heading early.',
+    'Keep an eye on altitude during descent — pull up if necessary.',
+    'To increase the speed : Press W - To decrease the speed : Press S',
+    'Gravity is strong on this route — descend carefully.',
+    'Do not wander too far away from the checkpoints - your fuel will be exhausted in no time'
+];
+
 export function startStats(game) {
-    startStatsLoop(game.stats, game.statsInterval, () => notify(game),() => gameOver(game) );
+    // startStatsLoop returns the interval id so we can clear it later
+    const id = startStatsLoop(game.stats, game.statsInterval, () => notify(game), () => gameOver(game));
+    game.statsInterval = id;
 }
 
 export function stopStats(game) {
-    stopStatsLoop(game.statsInterval);
+    game.statsInterval = stopStatsLoop(game.statsInterval);
 }
 
 function resetStats(game) {
     resetStatsLoop(game.stats,game.forwardSpeed);
 }
 export function gameOver(game) {
+    // Only trigger game over when the game is actively playing
+    if (!game || game.state !== 'PLAYING') return;
+
+    // Trigger explosion if plane has taken off (crash scenario) and not already crashing
+    if (game.hasTakenOff && !game._isCrashing) {
+        triggerExplosion(game.plane.position.clone());
+        game._isCrashing = true;
+    }
+
     game.state = 'GAME_OVER';
     game.isAnimating = false;
     stopStats(game);
-    resetPosition(game);
-    game.music.stopMovementAudio();
-    game.music.playGameOver();
+    
+    // Delay reset to allow full explosion to be visible (explosion lasts 6 seconds)
+    setTimeout(() => {
+        resetPosition(game);
+        resetExplosion();
+    }, 4000); // Increased from 1500ms to 4000ms (4 seconds)
+    
+    try { game.music.stopMovementAudio(); } catch (e) {}
+    try { game.music.playGameOver(); } catch (e) {}
     notify(game);
 }
 
@@ -42,13 +74,26 @@ export function start(game) {
 
     game.arrows = createArrows(game.scene, game.waypoints);
 
+    // Initialize HUD early so pickups and prompts can immediately use it
+    try { HUD.init(game); } catch (e) {}
+
     spawnFuelCans(game);
     spawnExhausts(game);
 
     resetPosition(game);
     resetStats(game);
+    resetExplosion(); // Reset explosion system
 
     game.music.playGame();
+
+    // Show subtle start message and init HUD
+    try { HUD.init(game); HUD.showStartMessage('Engines on — Taxiing...', 2200); } catch (e) { /* ignore when not in DOM environment */ }
+
+    // Start ascend countdown sequence: prompt player to manually ascend within 3s,
+    // and continue prompting if they don't.
+    try { HUD.startAscendSequence(game, { graceSeconds: 3, responseMs: 3000 }); } catch (e) {}
+    // Show controls hint reminder (text-only) so players learn controls
+    try { HUD.showControlsHint(6000); } catch (e) {}
 
     game.isAnimating = true;
     animate(game);
@@ -64,14 +109,14 @@ export function win(game) {
     resetPosition(game);
     game.music.stopMovementAudio();
     game.music.playAchieved();
-    game.notify();
+    notify(game);
 }
 
 export function lose(game) {
     game.state = 'LOSE';
     game.isAnimating = false;
     stopStats(game);
-    resetPosition();
+    resetPosition(game);
     game.music.stopMovementAudio();
     game.music.playGameOver();
     notify(game);
@@ -90,7 +135,8 @@ export function resume(game) {
 export function changeState(game) {
     if (game.state === 'PLAYING') {
         game.state = 'PAUSED';
-        pausePopup.style.display = 'flex';
+        // guard pause popup access (may be managed in play.js)
+        try { const pauseEl = document.getElementById('pausePopup'); if (pauseEl) pauseEl.style.display = 'flex'; } catch (e) {}
         game.isAnimating = false;
         game.targetForwardSpeed = 0;
         // animate(game);
@@ -99,7 +145,7 @@ export function changeState(game) {
 
     } else if (game.state === 'PAUSED') {
         game.state = 'PLAYING';
-        pausePopup.style.display = 'none';
+        try { const pauseEl = document.getElementById('pausePopup'); if (pauseEl) pauseEl.style.display = 'none'; } catch (e) {}
         game.isAnimating = true;
         animate(game);
         startStats(game);
@@ -123,6 +169,9 @@ export function resetPosition(game) {
     // Reset audio warning flags
     game.hasPlayedFuelWarning = false;
     game.hasPlayedAltitudeWarning = false;
+    
+    // Reset crash flag
+    game._isCrashing = false;
 }
 
 export function animate(game) {
@@ -139,17 +188,42 @@ export function animate(game) {
             can.update(deltaTime, game.plane.position);
         }
 
-        // handleAltitude(game);
-        handleFuelWarning(game);
-        handleAltitude(game);
+    // Handle warnings and safety systems
+    handleFuelWarning(game);
+    handleAltitude(game);
+    handleDescentWarnings(game);
+    handleProximityWarnings(game);
         updateControls(game);
         handleGroundCollision(game);
         handleCheckpoints(game);
+
+        // Off-course detection: compute distance from plane to current path segment
+        try {
+            const idx = game.currentWaypointIndex;
+            if (typeof idx === 'number' && idx < waypoints.length - 1) {
+                const a = waypoints[idx];
+                const b = waypoints[idx + 1];
+                const crossDist = distanceFromSegment(game.plane.position, a, b);
+                const OFF_COURSE_THRESHOLD = 200; // meters
+                if (crossDist > OFF_COURSE_THRESHOLD) {
+                    HUD.showOffCourse();
+                } else {
+                    HUD.hideOffCourse();
+                }
+            } else {
+                HUD.hideOffCourse();
+            }
+        } catch (e) {
+            // ignore if HUD unavailable
+        }
 
         // Update moving clouds with fade animations
         //updateClouds(game.cloudGroup, game.plane, game.camera, deltaTime);
 
         if (game.updateExhausts) game.updateExhausts();
+        
+        // Update explosion animation
+        updateExplosion();
         
         // Rotate the circle
         if (game.rotatingCircle) {
@@ -185,6 +259,9 @@ export function animate(game) {
         game.renderer.render(game.scene, game.camera);
         renderRadar(game);
 
+    // Update UI gauges each frame (if available) for responsive needles
+    try { if (typeof window !== 'undefined' && typeof window.updateRacingGauges === 'function') window.updateRacingGauges(); } catch (e) {}
+
         if (game.state === "PLAYING") {
             const currentTime = game.clock.getElapsedTime();
             
@@ -192,14 +269,33 @@ export function animate(game) {
             if (currentTime - game.lastScoreTime >= game.scoreInterval) {
                 game.score += 100;
                 game.lastScoreTime = currentTime;
-                //console.log("🪙 +100 points | Total Score:", game.score);
+                //console.log(" +100 points | Total Score:", game.score);
+                try { HUD.showPoints(100); } catch (e) {}
             }
+            // Periodic interactive tips
+            try {
+                if (!game.lastTipTime) game.lastTipTime = currentTime;
+                if (currentTime - game.lastTipTime >= (game.tipInterval || 20)) {
+                    const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
+                    HUD.showTip(tip, 5000);
+                    game.lastTipTime = currentTime;
+                }
+            } catch (e) {}
         }
 
-        document.getElementById("finalScore").innerText = `Score: ${game.score}`;
-        document.getElementById("gameScore").innerText = `${game.score}`;
-        //document.getElementById("timeValue").innerText = `${this.currentTime}`;
-        document.getElementById("speedValue").innerText = `${(game.forwardSpeed.toFixed(3)*100).toFixed(0)} km/h`;
+        try {
+            const finalScoreEl = document.getElementById('finalScore');
+            if (finalScoreEl) finalScoreEl.innerText = `Score: ${game.score}`;
+        } catch (e) {}
+        try {
+            const gameScoreEl = document.getElementById('gameScore');
+            if (gameScoreEl) gameScoreEl.innerText = `${game.score}`;
+        } catch (e) {}
+        // try updating speed display if present
+        try {
+            const speedEl = document.getElementById('speedValue');
+            if (speedEl) speedEl.innerText = `${(game.forwardSpeed.toFixed(3) * 100).toFixed(0)} km/h`;
+        } catch (e) {}
 
 
     }

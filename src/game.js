@@ -10,6 +10,7 @@ import { setupControls } from './controls/controls.js';
 import { createCheckpoints } from './scene/checkpoints.js';
 import { loadGroundModel, loadRunwayModel, loadSkybox } from './scene/scene.js';
 import { createRadarCamera } from './scene/radarCamera.js';
+import { setupExplosion, updateExplosion } from './shaders/explosion.js';
 
 export class Game {
     constructor(containerId) {
@@ -63,11 +64,11 @@ export class Game {
         // Ground collision systemhttps://github.com/itCanFly/flight-simulator/tags
         this.TAKEOFF_HEIGHT_THRESHOLD = 5; // Height required to be considered "taken off"
         this.GROUND_LEVEL = 1; // Ground level Y position
-        this.CRASH_THRESHOLD = 0.5; // Plane crashes when it hits close to ground level
+        this.CRASH_THRESHOLD = 3; // Plane crashes when it gets too close to ground (raised from 1.5 to 3)
         this.hasTakenOff = false;
 
         // Audio warning system
-        this.FUEL_WARNING_THRESHOLD = 5; // Fuel percentage for warning
+        this.FUEL_WARNING_THRESHOLD = 15; // Fuel percentage for warning
         this.hasPlayedFuelWarning = false;
         this.hasPlayedAltitudeWarning = false;
 
@@ -85,6 +86,9 @@ export class Game {
         this.clock = new THREE.Clock();
         this.isAnimating = false;
         this.fuelCans = [];
+    // Tip system for interactive prompts
+    this.lastTipTime = 0;
+    this.tipInterval = 22; // seconds between contextual tips
 
         // Scene Setup
         this.scene = setupScene();
@@ -141,6 +145,8 @@ export class Game {
         // Create rotating circle
         this.rotatingCircle = createRotatingCircle(this.scene);
  
+        // Setup explosion system
+        setupExplosion(this.scene, this.camera, this.renderer);
     }
 
     getFormattedTime() {

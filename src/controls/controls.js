@@ -1,5 +1,6 @@
 import { checkWaypointReached } from "../scene/waypoints";
 import { checkGroundCollision } from "../systems/safety";
+import { HUD } from '../ui/hud.js';
 
 export function setupControls(game) {
     game.keys = {
@@ -13,7 +14,15 @@ export function setupControls(game) {
     game.cameraMode = "thirdPerson";
 
     window.addEventListener("keydown", (e) => {
-        if (e.code in game.keys) game.keys[e.code] = true;
+        if (e.code in game.keys) {
+            game.keys[e.code] = true;
+            // If the controls hint is visible, hide it on first relevant input
+            try {
+                if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","KeyW","KeyS"].includes(e.code)) {
+                    HUD.hideControlsHint();
+                }
+            } catch (err) {}
+        }
         if (e.code === "KeyC") toggleCamera(game);
     });
 

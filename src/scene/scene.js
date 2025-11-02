@@ -53,24 +53,51 @@ export function loadRunwayModel(game, position = new THREE.Vector3(0, 0, 0)){
             });
 
             // Compute bounds so we can place the model so its lowest point sits at the desired Y
-            const box = new THREE.Box3().setFromObject(model);
+            let box = new THREE.Box3().setFromObject(model);
             const center = new THREE.Vector3();
+            box.getCenter(center);
+
+            // Shorten the runway to 1/3 along its longest horizontal axis (x or z)
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            // Guard against zero-size
+            const horizX = Math.max(size.x, 1e-6);
+            const horizZ = Math.max(size.z, 1e-6);
+
+            const axis = horizX >= horizZ ? 'x' : 'z';
+            const shortenFactor = 1 / 3; // keep one third of original length along chosen axis
+
+            // Apply non-uniform scaling on the chosen axis while preserving other scales
+            // model.scale is a Vector3; multiply the selected component
+            if (!model.scale) model.scale = new THREE.Vector3(1, 1, 1);
+            model.scale[axis] = (model.scale[axis] || 1) * shortenFactor;
+
+            // After scaling, recompute bounds so centering/positioning is correct
+            box = new THREE.Box3().setFromObject(model);
+            box.getSize(size);
             box.getCenter(center);
 
             // Position the model so its center (x,z) is at the requested coords
             model.position.x = position.x - center.x;
             model.position.z = position.z - center.z;
-            // Place lowest point at requested Y
+            // Place lowest point at requested Y (so runway sits at desired height)
             model.position.y = position.y - box.min.y;
 
             // Optionally scale if it's tiny compared to ground (kept conservative)
-            const size = new THREE.Vector3();
-            box.getSize(size);
             const targetExtent = 3000;
             if (Math.max(size.x, size.z) < targetExtent * 0.05) {
                 const uniformScale = targetExtent / Math.max(size.x, size.z);
                 model.scale.setScalar(uniformScale);
+                // recompute box/center/position after uniform scaling
+                box = new THREE.Box3().setFromObject(model);
+                box.getSize(size);
+                box.getCenter(center);
+                model.position.x = position.x - center.x;
+                model.position.z = position.z - center.z;
+                model.position.y = position.y - box.min.y;
             }
+
+            console.log(`Runway model shortened on ${axis}-axis by factor ${shortenFactor}`);
 
             game.runway = model;
             game.scene.add(model);
