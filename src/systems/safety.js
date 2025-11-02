@@ -100,6 +100,11 @@ export function handleGroundCollision(game) {
     if (game.hasTakenOff && game.plane.position.y <= game.CRASH_THRESHOLD) {
         game._isCrashing = true;
         
+        // STOP the plane immediately - freeze position and physics
+        game.plane.position.y = game.CRASH_THRESHOLD; // Lock plane at crash height
+        game.verticalVelocity = 0; // Stop falling
+        game.forwardSpeed = 0; // Stop forward movement
+        
         // Trigger explosion at plane's position
         triggerExplosion(game.plane.position.clone());
         
@@ -220,6 +225,11 @@ export function checkGroundCollision(game) {
         // Check for ground collision after takeoff (use crash threshold for more realistic detection)
         if (game.hasTakenOff && planeY <= game.CRASH_THRESHOLD) {
             game._isCrashing = true;
+            
+            // STOP the plane immediately - freeze position and physics
+            game.plane.position.y = game.CRASH_THRESHOLD; // Lock plane at crash height
+            game.verticalVelocity = 0; // Stop falling
+            game.forwardSpeed = 0; // Stop forward movement
             
             // Trigger explosion at plane's position
             triggerExplosion(game.plane.position.clone());

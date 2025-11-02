@@ -27,19 +27,21 @@ export function setupExplosion(s, c, r) {
 
   const fireMat = new THREE.MeshBasicMaterial({
     transparent: true,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending, // Changed from Additive to Normal for more opaque color
     depthWrite: false,
     depthTest: false, // Always render on top
     side: THREE.DoubleSide, // Visible from both sides
-    opacity: 1.0, // Full opacity - additive blending will make it bright
+    opacity: 1.0, // Full opacity to completely hide the plane
+    color: 0xffffff, // Pure white to show true texture colors
   });
 
   const groundMat = new THREE.MeshBasicMaterial({
     transparent: true,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending, // Changed from Additive to Normal
     depthWrite: false,
     depthTest: false, // Always render on top
-    opacity: 0.9, // Slightly less for ground
+    opacity: 0.95, // Nearly full opacity
+    color: 0xffffff, // Pure white to show true texture colors
   });
 
   fireMesh = new THREE.Mesh(fireGeo, fireMat);
@@ -180,22 +182,21 @@ export function updateExplosion() {
     fireMesh.quaternion.copy(camera.quaternion);
   }
 
-  // Scale animation - smaller and more concentrated
-  const baseScale = 6; // Reduced from 10 to 6 for tighter explosion
-  const pulseScale = 3; // Reduced from 5 to 3 for less expansion
+  // Scale animation - increased to completely hide plane
+  const baseScale = 8; // Increased from 6 to 8 to ensure full coverage
+  const pulseScale = 3; // Keep at 3 for concentrated effect
   const scale = baseScale + Math.sin(t * Math.PI) * pulseScale;
   fireMesh.scale.setScalar(scale);
   
-  // Ground explosion also smaller and tighter
-  const gBaseScale = 1.8; // Reduced from 2.5
-  const gPulse = 0.8; // Reduced from 1.2
+  // Ground explosion also larger for full coverage
+  const gBaseScale = 2.2; // Increased from 1.8
+  const gPulse = 0.8;
   const gScale = gBaseScale + Math.sin(t * Math.PI) * gPulse;
-  groundMesh.scale.set(gScale * 2.5, 1, gScale * 2); // Reduced multipliers from 3.5 and 2.5
+  groundMesh.scale.set(gScale * 2.8, 1, gScale * 2.3); // Slightly increased
   
-  // Enhanced color/brightness for more vibrant effect
-  const brightness = 1.0; // Keep constant for maximum visibility
-  fireMesh.material.opacity = brightness;
-  groundMesh.material.opacity = brightness * 0.85;
+  // Full opacity to completely hide the plane
+  fireMesh.material.opacity = 1.0; // Maximum opacity
+  groundMesh.material.opacity = 0.95;
 }
 
 export function resetExplosion() {
