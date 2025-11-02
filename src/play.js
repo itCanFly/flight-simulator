@@ -658,7 +658,7 @@ if (quitButton) {
         myGame.state = 'MENU';
         // Go to levels instead of main menu
         localStorage.setItem('showLevelSelection', 'true');
-        window.location.href = '/menu.html';
+        window.location.href = './menu.html';
     });
 }
 
@@ -719,7 +719,7 @@ if (nextLevelButton) {
         } else {
             // All levels complete - return to menu
             localStorage.setItem('showLevelSelection', 'true');
-            window.location.href = '/menu.html';
+            window.location.href = './menu.html';
         }
     });
 }
@@ -765,7 +765,7 @@ if (quitPauseButton) {
         myGame.state = 'MENU';
         // Go to levels instead of main menu
         localStorage.setItem('showLevelSelection', 'true');
-        window.location.href = '/menu.html';
+        window.location.href = './menu.html';
     });
 }
 
@@ -826,7 +826,7 @@ if (nextWinLevelButton) {
         console.log(myGame.level)
         localStorage.setItem('selectedLevel', myGame.level);
         // Redirect to the gameplay page
-        window.location.href = '/gameplay.html';
+        window.location.href = './gameplay.html';
     });
 }
 
@@ -850,7 +850,7 @@ if (quitWinButton) {
         myGame.state = 'MENU';
         // Go to levels instead of main menu
         localStorage.setItem('showLevelSelection', 'true');
-        window.location.href = '/menu.html';
+        window.location.href = './menu.html';
     });
 }
 
@@ -876,7 +876,7 @@ if (quitLoseButton) {
         myGame.state = 'MENU';
         // Go to levels instead of main menu
         localStorage.setItem('showLevelSelection', 'true');
-        window.location.href = '/menu.html';
+        window.location.href = './menu.html';
     });
 }
 
