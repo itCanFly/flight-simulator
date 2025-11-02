@@ -1168,6 +1168,14 @@
         
         // Level selection functionality with unlock system
         function initializeLevelSystem() {
+            // TEMPORARY: Reset localStorage to clear unlocked levels
+            // Remove this line after running once
+           // localStorage.removeItem('completedLevels');
+            
+            // TEMPORARY: Unlock all levels for testing
+            // TODO: Remove this line before production
+            //localStorage.setItem('completedLevels', JSON.stringify([1, 2, 3]));
+            
             // Get completed levels from localStorage (default: only level 1)
             let completedLevels = JSON.parse(localStorage.getItem('completedLevels') || '[1]');
             
