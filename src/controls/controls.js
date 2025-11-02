@@ -29,7 +29,7 @@ export function setupControls(game) {
     window.addEventListener("keyup", (e) => {
         if (e.code in game.keys) {
             game.keys[e.code] = false;
-            game.stats.fuel -= 1;
+            game.stats.fuel -= 2;
         }
     });
 }
