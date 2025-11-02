@@ -219,6 +219,48 @@
         .dropdown-item-icon {
             font-size: 1.1rem;
         }
+        
+        /* Level Lock/Unlock System */
+        .level-item {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .level-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .level-item.locked:hover {
+            background: rgba(239, 68, 68, 0.1);
+            padding-left: 1.5rem;
+        }
+        
+        .level-item.unlocked:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        
+        .level-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        
+        .level-status.locked {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+        
+        .level-status.unlocked {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+        }
 
         /* User Profile */
         .user-profile {
@@ -711,17 +753,20 @@
                         <span class="dropdown-icon">▼</span>
                     </a>
                     <div class="dropdown-menu">
-                        <a href="#" class="dropdown-item">
-                            <span class="dropdown-item-icon"></span>
+                        <a href="#" class="dropdown-item level-item" data-level="1">
+                            <span class="dropdown-item-icon">✓</span>
                             <span>Level 1</span>
+                            <span class="level-status unlocked">UNLOCKED</span>
                         </a>
-                        <a href="#" class="dropdown-item">
-                            <span class="dropdown-item-icon"></span>
+                        <a href="#" class="dropdown-item level-item" data-level="2">
+                            <span class="dropdown-item-icon">🔒</span>
                             <span>Level 2</span>
+                            <span class="level-status locked">LOCKED</span>
                         </a>
-                        <a href="#" class="dropdown-item">
-                            <span class="dropdown-item-icon"></span>
+                        <a href="#" class="dropdown-item level-item" data-level="3">
+                            <span class="dropdown-item-icon">🔒</span>
                             <span>Level 3</span>
+                            <span class="level-status locked">LOCKED</span>
                         </a>
                     </div>
                 </li>
@@ -1121,20 +1166,74 @@
             localStorage.setItem('muteAll', false);
         });
         
-        // Level selection functionality
+        // Level selection functionality with unlock system
+        function initializeLevelSystem() {
+            // Get completed levels from localStorage (default: only level 1)
+            let completedLevels = JSON.parse(localStorage.getItem('completedLevels') || '[1]');
+            
+            // Ensure level 1 is always available
+            if (!completedLevels.includes(1)) {
+                completedLevels.push(1);
+                localStorage.setItem('completedLevels', JSON.stringify(completedLevels));
+            }
+            
+            // Update UI for each level
+            document.querySelectorAll('.level-item').forEach(item => {
+                const level = parseInt(item.getAttribute('data-level'));
+                const icon = item.querySelector('.dropdown-item-icon');
+                const status = item.querySelector('.level-status');
+                
+                if (completedLevels.includes(level)) {
+                    // Level is unlocked
+                    item.classList.remove('locked');
+                    item.classList.add('unlocked');
+                    if (icon) icon.textContent = '✓';
+                    if (status) {
+                        status.textContent = 'UNLOCKED';
+                        status.classList.remove('locked');
+                        status.classList.add('unlocked');
+                    }
+                } else {
+                    // Level is locked
+                    item.classList.add('locked');
+                    item.classList.remove('unlocked');
+                    if (icon) icon.textContent = '🔒';
+                    if (status) {
+                        status.textContent = 'LOCKED';
+                        status.classList.add('locked');
+                        status.classList.remove('unlocked');
+                    }
+                }
+            });
+        }
+        
+        // Initialize level system on page load
+        initializeLevelSystem();
+        
         document.querySelectorAll('.dropdown-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                playButtonSound();
                 e.preventDefault();
 
                 const levelText = item.textContent.trim();
 
                 // Only trigger if the item text starts with "Level"
-                if (levelText.startsWith('Level')) {
-                    const level = levelText.replace('Level ', ''); // Extract the number (e.g. "1", "2", "3")
+                if (levelText.includes('Level')) {
+                    const levelItem = item.closest('.level-item');
+                    if (!levelItem) return;
+                    
+                    const level = parseInt(levelItem.getAttribute('data-level'));
+                    
+                    // Check if level is locked
+                    if (levelItem.classList.contains('locked')) {
+                        playButtonSound();
+                        alert(`Level ${level} is locked! Complete Level ${level - 1} first.`);
+                        return;
+                    }
+                    
+                    playButtonSound();
 
                     // Store the level in localStorage
-                    console.log(level)
+                    console.log(level);
                     localStorage.setItem('selectedLevel', level);
 
                     // Redirect to gameplay page

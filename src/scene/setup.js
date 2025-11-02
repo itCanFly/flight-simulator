@@ -9,10 +9,14 @@ export function setupScene(level = 1) {
         // Day
         scene.background = new THREE.Color(0x87ceeb); // Light blue
         scene.fog = new THREE.FogExp2(0x87ceeb, 0.0008);
-    } else {
-        // Night (levels 2 and 3)
+    } else if (level === 2) {
+        // Night with moderate fog
         scene.background = new THREE.Color(0x000022); // Deep night sky
-        scene.fog = new THREE.FogExp2(0x000011, 0.0004);
+        scene.fog = new THREE.FogExp2(0x000011, 0.0012);
+    } else {
+        // Night with heavy fog (level 3)
+        scene.background = new THREE.Color(0x000022); // Deep night sky
+        scene.fog = new THREE.FogExp2(0x000011, 0.0015);
     }
 
     return scene;
@@ -186,3 +190,60 @@ export function createRain(scene, options = {}) {
     return { rain, updateRain };
 }
 
+// Dynamic level transition - update scene without reload
+export function transitionSceneToLevel(scene, level, currentStars = null, currentRain = null) {
+    // Update background and fog based on level
+    if (level === 1) {
+        // Day
+        scene.background = new THREE.Color(0x87ceeb);
+        scene.fog = new THREE.FogExp2(0x87ceeb, 0.0008);
+        
+        // Remove stars if they exist
+        if (currentStars) {
+            scene.remove(currentStars);
+            currentStars = null;
+        }
+        
+        // Remove rain if it exists
+        if (currentRain && currentRain.rain) {
+            scene.remove(currentRain.rain);
+            currentRain = null;
+        }
+    } else if (level === 2) {
+        // Night with moderate fog
+        scene.background = new THREE.Color(0x000022);
+        scene.fog = new THREE.FogExp2(0x000011, 0.0012);
+        
+        // Add stars if they don't exist
+        if (!currentStars) {
+            currentStars = addStars(scene, 2500, 10000);
+        }
+        
+        // Remove rain if transitioning from level 3
+        if (currentRain && currentRain.rain) {
+            scene.remove(currentRain.rain);
+            currentRain = null;
+        }
+    } else {
+        // Night with heavy fog (level 3)
+        scene.background = new THREE.Color(0x000022);
+        scene.fog = new THREE.FogExp2(0x000011, 0.0015);
+        
+        // Add more stars for level 3
+        if (!currentStars) {
+            currentStars = addStars(scene, 3500, 10000);
+        }
+        
+        // Add rain for level 3
+        if (!currentRain) {
+            currentRain = createRain(scene, {
+                count: 15000,
+                speed: 0.3,
+                area: 1000,
+                height: 500
+            });
+        }
+    }
+    
+    return { stars: currentStars, rain: currentRain };
+}

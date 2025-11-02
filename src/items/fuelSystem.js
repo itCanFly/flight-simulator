@@ -11,7 +11,8 @@ export function spawnFuelCans(game) {
     game.fuelCans = [];
 
     const curve = new THREE.CatmullRomCurve3(waypoints, false, 'catmullrom', 0.2);
-    const numCans = 5 - game.level ;
+    // More forgiving fuel system: 6, 4, 3 cans instead of 4, 3, 2
+    const numCans = 7 - game.level;
 
     for (let i = 1; i <= numCans; i++) {
         const t = i / (numCans + 1);

@@ -3,11 +3,12 @@ import * as THREE from 'three';
 import { createPlane } from './plane.js';
 import { createClouds} from './clouds/clouds.js';
 import { getFormatted } from './scene/stats.js';
-import { setupScene, setupLighting, setupRenderer, setupCamera } from './scene/setup.js';
+import { setupScene, setupLighting, setupRenderer, setupCamera, transitionSceneToLevel } from './scene/setup.js';
 //import { createRotatingCircle, createArrows } from './scene/waypoints.js';
 import { Music } from './audio/Music.js';
 import { setupControls } from './controls/controls.js';
 import { createCheckpoints } from './scene/checkpoints.js';
+import { spawnFuelCans } from './items/fuelSystem.js';
 import { loadGroundModel, loadRunwayModel, loadSkybox } from './scene/scene.js';
 import { createRadarCamera } from './scene/radarCamera.js';
 import { setupExplosion, updateExplosion } from './shaders/explosion.js';
@@ -46,6 +47,7 @@ export class Game {
         // Rotating circle
         this.rotatingCircle = null;
         this.rainEffect = null;
+        this.stars = null;
         // Stats
         this.stats={
             speed : 90,
@@ -203,6 +205,42 @@ export class Game {
     toggleCameraMode() {
         this.cameraMode = this.cameraMode === "thirdPerson" ? "topView" : "thirdPerson";
     }
+    
+    // Level progression without page reload
+    async progressToNextLevel() {
+        if (this.level >= 3) {
+            console.log('🎉 All levels completed!');
+            return false;
+        }
+        
+        // Increment level
+        this.level++;
+        localStorage.setItem('selectedLevel', this.level);
+        
+        // Update scene environment
+        const sceneUpdate = transitionSceneToLevel(this.scene, this.level, this.stars, this.rainEffect);
+        this.stars = sceneUpdate.stars;
+        this.rainEffect = sceneUpdate.rain;
+        
+        // Update lighting
+        this.scene.remove(this.sunLight);
+        this.sunLight = setupLighting(this.scene, this.level);
+        this.scene.add(this.sunLight);
+        
+        // Recreate checkpoints for new level
+        this.checkpoints.forEach(cp => this.scene.remove(cp));
+        this.checkpoints = createCheckpoints(this.level, this.scene);
+        this.currCheckpointIndex = 0;
+        
+        // Respawn fuel cans for new level
+        this.fuelCans.forEach(c => this.scene.remove(c.group));
+        this.fuelCans = [];
+        spawnFuelCans(this);
+        
+        console.log(`✈️ Progressed to Level ${this.level}`);
+        return true;
+    }
+    
     // Resize Handling
     _onResize() {
         this.camera.aspect = window.innerWidth / window.innerHeight;

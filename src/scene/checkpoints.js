@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { win, gameOver } from '../items/gameflow';
+import { win, lose } from '../items/gameflow';
 import { getWaypointsForLevel } from './waypoints';
 import { HUD } from '../ui/hud.js';
 
@@ -60,7 +60,7 @@ export function createBracketPair(position, color = 0x0a3766) {
 
 export function createCheckpoints(level, scene) {
     const checkpoints = [];
-    level = 1;
+            
     const waypoints = getWaypointsForLevel(level);
 
     const curve = new THREE.CatmullRomCurve3(waypoints, false, 'catmullrom', 0.2);
@@ -133,24 +133,21 @@ export function handleCheckpoints(game) {
     const passedCheckpoints = game.checkpoints.filter(cp => cp.isPassed).length;
 
     const percentPassed = (passedCheckpoints / totalCheckpoints) * 100;
-    const winThreshold = 70 + (game.level*10) ;
+    const winThreshold = 70 + (game.level*10);
 
+    // Check if last checkpoint is passed and evaluate win/lose condition
     if (lastCheckpoint.isPassed){
-        if (percentPassed > winThreshold){
+        if (percentPassed >= winThreshold){
+            console.log("🏁 Level Complete!");
             win(game);
         }
         else{
-            gameOver(game);
+            lose(game);
         }
+        return; // Exit early to prevent double triggering
     }
 
-    const allPassed = game.checkpoints.every(cp => cp.isPassed);
-    
-    if (allPassed) {
-        console.log("🏁 Level Complete!");
-        win(game);
-    }
-
+    // Pulsing animation for checkpoints
     if (game.checkpoints) {
         const pulse = 1 + Math.sin(Date.now() * 0.004) * 0.1;
         game.checkpoints.forEach(cp => cp.scale.setScalar(pulse));

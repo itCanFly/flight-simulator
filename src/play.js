@@ -44,7 +44,21 @@ try { HUD.init(myGame); } catch (e) {}
 // These help diagnose extension/channel issues and other runtime problems during testing.
 try {
     window.addEventListener('unhandledrejection', (e) => {
-        try { console.error('[unhandledrejection]', e && e.reason ? e.reason : e); } catch (err) {}
+        try {
+            // Filter out benign extension errors that attempt to message a background script
+            // (e.g. "Could not establish connection. Receiving end does not exist.") which are
+            // produced by browser extensions and not by the game code. Suppress these to
+            // avoid noisy console logs during testing while still surfacing other errors.
+            const reason = e && e.reason ? e.reason : null;
+            const msg = reason && (reason.message || reason.toString());
+            if (typeof msg === 'string' && msg.includes('Could not establish connection')) {
+                try { console.warn('[unhandledrejection] suppressed extension error:', msg); } catch (w) {}
+                // Prevent the default unhandled rejection logging
+                try { e.preventDefault(); } catch (p) {}
+                return;
+            }
+            console.error('[unhandledrejection]', reason || e);
+        } catch (err) {}
     });
     window.addEventListener('error', (e) => {
         try { console.error('[window.error]', e && e.message ? e.message : e); } catch (err) {}
@@ -376,7 +390,8 @@ function updateStats(game) {
     const fuelEl = document.getElementById('fuelValue'); if (fuelEl) {
         // Hide the initial 100% placeholder so the HUD doesn't show '100%' at startup.
         // Only display the numeric fuel value once it drops below 100%.
-        fuelEl.textContent = (typeof fuel === 'number' && fuel < 100) ? `${fuel}%` : '';
+        const fuelInt = Math.round(fuel);
+        fuelEl.textContent = (typeof fuel === 'number' && fuel < 100) ? `${fuelInt}%` : '';
     }
     const fuelBar = document.getElementById('fuelBar'); if (fuelBar) fuelBar.style.width = `${fuel}%`;
 }
@@ -514,16 +529,53 @@ if (restartButton) {
 }
 
 if (nextLevelButton) {
-    nextLevelButton.addEventListener('click', () => {
+    nextLevelButton.addEventListener('click', async () => {
         myGame.music.playButton();
         cancelScheduledGameOver();
         if (gameOverPopup) gameOverPopup.style.display = 'none';
-        myGame.level++;
-        // savedLevel++;
-        console.log(myGame.level)
-        localStorage.setItem('selectedLevel', myGame.level);
-        // Redirect to the gameplay page
-        window.location.href = '/gameplay.html';
+        
+        // Show transition overlay
+        const transitionOverlay = document.getElementById('levelTransitionOverlay');
+        if (transitionOverlay) {
+            transitionOverlay.classList.remove('hidden');
+            transitionOverlay.classList.add('show');
+        }
+        
+        // Wait for fade in
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Progress to next level (no page reload!)
+        const success = await myGame.progressToNextLevel();
+        
+        if (success) {
+            // Update level info display
+            const lvlEl = document.getElementById('levelInfo');
+            if (lvlEl) lvlEl.textContent = `Level: ${myGame.level}`;
+            
+            // Hide "Next Level" button if we're now on level 3
+            if (myGame.level === 3 && nextLevelButton) {
+                nextLevelButton.style.display = 'none';
+            }
+            
+            // Wait for transition animation
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Fade out transition
+            if (transitionOverlay) {
+                transitionOverlay.classList.remove('show');
+                transitionOverlay.classList.add('hidden');
+            }
+            
+            // Wait for fade out
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Start new level immediately
+            start(myGame);
+        } else {
+            // All levels complete - return to menu
+            localStorage.setItem('showLevelSelection', 'true');
+            window.location.href = '/menu.html';
+        }
     });
 }
 

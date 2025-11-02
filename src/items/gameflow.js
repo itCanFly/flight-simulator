@@ -108,6 +108,17 @@ export function win(game) {
     resetPosition(game);
     game.music.stopMovementAudio();
     game.music.playAchieved();
+    
+    // Unlock next level
+    const completedLevels = JSON.parse(localStorage.getItem('completedLevels') || '[1]');
+    const nextLevel = game.level + 1;
+    
+    if (nextLevel <= 3 && !completedLevels.includes(nextLevel)) {
+        completedLevels.push(nextLevel);
+        localStorage.setItem('completedLevels', JSON.stringify(completedLevels));
+        console.log(`🔓 Level ${nextLevel} unlocked!`);
+    }
+    
     notify(game);
 }
 
@@ -193,6 +204,11 @@ export function animate(game) {
         for (const can of game.fuelCans) {
             can.update(deltaTime, game.plane.position);
         }
+    
+    // Update rain effect if it exists (for level 3)
+    if (game.rainEffect && game.rainEffect.updateRain) {
+        game.rainEffect.updateRain();
+    }
 
     // Handle warnings and safety systems
     handleFuelWarning(game);
