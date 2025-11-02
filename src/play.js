@@ -35,7 +35,8 @@ import { stopStats } from './items/gameflow.js';
 // -----------------
 const gameScreen = document.getElementById('gameScreen');
 if (gameScreen) gameScreen.style.display = 'block';
-const myGame = new Game("gameScreen");
+const myGame = new Game("gameScreen",parseInt(localStorage.getItem('selectedLevel')));
+console.log(localStorage.getItem('selectedLevel'))
 myGame.isAnimating = false;
 // Initialize HUD and screen elements
 try { HUD.init(myGame); } catch (e) {}
