@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { win, lose } from '../items/gameflow';
 import { getWaypointsForLevel } from './waypoints';
+import { HUD } from '../ui/hud.js';
 
 export function createBracketPair(position, color = 0x0a3766) {
     const group = new THREE.Group();
@@ -94,7 +95,8 @@ export function createCheckpoints(level, scene) {
 export function handleCheckpoints(game) {
         
     if (!game.checkpoints) return;
-
+    try { HUD.init(game); } catch (e) {}
+    
     const planePos = game.plane.position.clone();
 
     for (let i = 0; i < game.checkpoints.length; i++) {
@@ -119,6 +121,7 @@ export function handleCheckpoints(game) {
             });
 
             game.score += 100;
+            try { HUD.showPoints(100); } catch (e) {}
             game.currCheckpointIndex = i + 1; 
         }
     }

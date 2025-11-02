@@ -270,12 +270,12 @@ export function animate(game) {
             const currentTime = game.clock.getElapsedTime();
             
             // Give 100 points every 10 seconds
-            if (currentTime - game.lastScoreTime >= game.scoreInterval) {
-                game.score += 100;
-                game.lastScoreTime = currentTime;
-                //console.log(" +100 points | Total Score:", game.score);
-                try { HUD.showPoints(100); } catch (e) {}
-            }
+            // if (currentTime - game.lastScoreTime >= game.scoreInterval) {
+            //     game.score += 100;
+            //     game.lastScoreTime = currentTime;
+            //     //console.log(" +100 points | Total Score:", game.score);
+            //     try { HUD.showPoints(100); } catch (e) {}
+            // }
             // Periodic interactive tips
             try {
                 if (!game.lastTipTime) game.lastTipTime = currentTime;
