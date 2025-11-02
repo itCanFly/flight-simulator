@@ -286,6 +286,14 @@ export class Music {
 
     playAchieved() {
         if (this.achievedAudio) {
+            // Lower the game music volume to make achieved sound more prominent
+            const originalGameVolume = this.gameAudio.volume;
+            this.fadeOut(this.gameAudio, () => {
+                this.gameAudio.volume = 0.2; // Keep it quieter in background
+            });
+            
+            // Play achieved sound at high volume
+            this.achievedAudio.volume = 1.0; // Maximum volume for achievement
             this.achievedAudio.play().catch(err => {
                 console.warn("Achieved audio playback failed:", err);
             });
