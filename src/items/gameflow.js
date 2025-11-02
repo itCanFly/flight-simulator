@@ -1,6 +1,6 @@
 import { spawnFuelCans } from '../items/fuelSystem.js';
 import { spawnExhausts } from '../items/exhaustSystem.js';
-import { createRotatingCircle, createArrows } from '../scene/waypoints.js';
+//import { createRotatingCircle, createArrows } from '../scene/waypoints.js';
 import { handleAltitude, handleFuelWarning, handleGroundCollision,hideAltitudeWarning } from '../systems/safety.js';
 import { startStatsLoop, stopStatsLoop , resetStatsLoop,getFormatted } from '../scene/stats.js';
 import { setupControls, updateControls } from '../controls/controls.js';
@@ -40,7 +40,7 @@ export function start(game) {
     game.forwardSpeed = game.minForwardSpeed; 
     game.currentWaypointIndex = 0;
 
-    game.arrows = createArrows(game.scene, game.waypoints);
+    //game.arrows = createArrows(game.scene, game.waypoints);
 
     spawnFuelCans(game);
     spawnExhausts(game);

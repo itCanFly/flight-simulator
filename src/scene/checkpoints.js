@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { gameOver } from '../items/gameflow';
+import { win, lose } from '../items/gameflow';
+import { getWaypointsForLevel } from './waypoints';
 
 export function createBracketPair(position, color = 0x0a3766) {
     const group = new THREE.Group();
@@ -58,40 +59,14 @@ export function createBracketPair(position, color = 0x0a3766) {
 
 export function createCheckpoints(level, scene) {
     const checkpoints = [];
+            
+    const waypoints = getWaypointsForLevel(level);
 
-    let controlPoints = [];
-    if (level === 1) {
-        controlPoints = [
-            new THREE.Vector3(1800, 1, -800),
-            new THREE.Vector3(1742, 92, -236),
-            new THREE.Vector3(-125, 365, -558),
-            new THREE.Vector3(-1706, 295, -2033),
-        ];
-    } else if (level === 2) {
-        controlPoints = [
-            new THREE.Vector3(1800, 10, -900),
-            new THREE.Vector3(1900, 60, -950),
-            new THREE.Vector3(2000, 40, -1100),
-            new THREE.Vector3(2100, 70, -1300),
-            new THREE.Vector3(2200, 80, -1500),
-        ];
-    } else if (level === 3) {
-        controlPoints = [
-            new THREE.Vector3(1800, 10, -900),
-            new THREE.Vector3(1850, 30, -950),
-            new THREE.Vector3(1900, 50, -1000),
-            new THREE.Vector3(2000, 60, -1150),
-            new THREE.Vector3(2100, 80, -1300),
-            new THREE.Vector3(2200, 90, -1500),
-            new THREE.Vector3(2400, 120, -1800),
-        ];
-    }
-
-    const curve = new THREE.CatmullRomCurve3(controlPoints, false, 'catmullrom', 0.3);
-    const segments = 8 + level * 5;
+    const curve = new THREE.CatmullRomCurve3(waypoints, false, 'catmullrom', 0.2);
+    const segments = 5 + level * 5;
     const curvePoints = curve.getPoints(segments);
 
-    const curveGeometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(200));
+    const curveGeometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
     const curveMaterial = new THREE.LineBasicMaterial({ color: 0x008800 });
     const curveLine = new THREE.Line(curveGeometry, curveMaterial);
     scene.add(curveLine);
@@ -117,41 +92,64 @@ export function createCheckpoints(level, scene) {
 }
 
 export function handleCheckpoints(game) {
-    if (!game.checkpoints || game.currCheckpointIndex >= game.checkpoints.length) return;
+        
+    if (!game.checkpoints) return;
 
-    const bracket = game.checkpoints[game.currCheckpointIndex];
-    const planePos = game.plane.position;
-    const distance = planePos.distanceTo(bracket.position);
+    const planePos = game.plane.position.clone();
 
-    if (distance < 50 && !bracket.isPassed) {
-        bracket.isPassed = true;
-        game.score += 1;
+    for (let i = 0; i < game.checkpoints.length; i++) {
+        const bracket = game.checkpoints[i];
+        if (bracket.isPassed) continue; 
+        const localPos = bracket.worldToLocal(planePos.clone());
+        const forwardThreshold = 10;
+        const sideThreshold = 60;
+        const verticalThreshold = 80;
 
-        bracket.traverse(child => {
-            if (child.material) child.material.emissive.set(0x00ff00);
-        });
+        const passedThrough =
+            Math.abs(localPos.z) < forwardThreshold &&
+            Math.abs(localPos.x) < sideThreshold &&
+            Math.abs(localPos.y) < verticalThreshold;
 
-        setTimeout(() => {
+        if (passedThrough && !bracket.isPassed) {
+            bracket.isPassed = true;
+            console.log(`✅ Passed checkpoint ${i}!`);
+
             bracket.traverse(child => {
-                if (child.material) {
-                    const targetColor = game.currCheckpointIndex === game.checkpoints.length - 1 ? 0xFFD700 : 0x0a3766;
-                    child.material.emissive.set(targetColor);
-                }
+                if (child.material) child.material.emissive.set(0x00ff00);
             });
-        }, 800);
 
-        game.currCheckpointIndex++;
-
-        if (game.currCheckpointIndex >= game.checkpoints.length) {
-            console.log("🏁 Level Complete!");
-            gameOver(game);
+            game.score += 100;
+            game.currCheckpointIndex = i + 1; 
         }
+    }
+
+    const lastIndex = game.checkpoints.length - 1;
+    const lastCheckpoint = game.checkpoints[lastIndex];
+
+    const totalCheckpoints = game.checkpoints.length;
+    const passedCheckpoints = game.checkpoints.filter(cp => cp.isPassed).length;
+
+    const percentPassed = (passedCheckpoints / totalCheckpoints) * 100;
+    const winThreshold = 70 + (game.level*10) ;
+
+    if (lastCheckpoint.isPassed){
+        if (percentPassed > winThreshold){
+            win(game);
+        }
+        else{
+            lose(game);
+        }
+    }
+
+    const allPassed = game.checkpoints.every(cp => cp.isPassed);
+    
+    if (allPassed) {
+        console.log("🏁 Level Complete!");
+        win(game);
     }
 
     if (game.checkpoints) {
         const pulse = 1 + Math.sin(Date.now() * 0.004) * 0.1;
-        game.checkpoints.forEach(cp => {
-            cp.scale.setScalar(pulse);
-        });
+        game.checkpoints.forEach(cp => cp.scale.setScalar(pulse));
     }
 }

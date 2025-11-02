@@ -1,4 +1,4 @@
-import { checkWaypointReached } from "../scene/waypoints";
+//import { checkWaypointReached } from "../scene/waypoints";
 import { checkGroundCollision } from "../systems/safety";
 
 export function setupControls(game) {
@@ -75,7 +75,7 @@ export function updateControls(game) {
     game.plane.translateZ(game.forwardSpeed);
 
      // Waypoint check
-    checkWaypointReached(game);
+    //checkWaypointReached(game);
         // Ground collision
     const hasCollided = checkGroundCollision(game);
 
