@@ -47,9 +47,10 @@ export class Music {
         // Track movement audio state
         this.isMovementAudioPlaying = false;
         
-        // Auto-start music after loading
+        // Auto-start music after loading - FORCE autoplay without user interaction
         this.hasUserInteracted = true;
         this.pendingMenuMusic = false;
+        this.autoplayEnabled = true;
         
         // Audio transition settings
         this.fadeConfig = {
@@ -175,24 +176,54 @@ export class Music {
     }
 
     initAutoplay() {
-        // Try to enable autoplay after a short delay
+        // Force autoplay without user interaction requirement
+        // Start audio muted, then unmute immediately (bypasses browser restrictions)
         setTimeout(() => {
-            // Attempt to play a silent audio to enable autoplay context
-            const silentAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjie3O6/eSsFJnzS6NCCMwgcW7Ps2JJXFg1Kqd3qp2seB0md3fHNfSsHJoTA8dOFOAgYYrjn5KJOFAhKn+H1vWoBETK3);');
-            silentAudio.volume = 0;
-            silentAudio.play().then(() => {
-                console.log("🎵 Autoplay enabled");
+            this.hasUserInteracted = true;
+            this.autoplayEnabled = true;
+            console.log("🎵 Initializing autoplay...");
+            
+            // Set all audio to muted initially
+            this.menuAudio.muted = true;
+            this.gameAudio.muted = true;
+            this.gameOverAudio.muted = true;
+            
+            // Try to start menu audio muted (browsers allow this)
+            this.menuAudio.play().then(() => {
+                console.log("🎵 Menu audio started muted");
+                // Unmute after a brief delay
+                setTimeout(() => {
+                    this.menuAudio.muted = false;
+                    this.gameAudio.muted = false;
+                    this.gameOverAudio.muted = false;
+                    console.log("🎵 Audio unmuted - sound should now be playing");
+                }, 100);
             }).catch(err => {
-                console.log("🎵 Autoplay blocked, will start on first interaction");
-                this.hasUserInteracted = false;
+                console.warn("Menu audio autoplay failed:", err);
+                // Fallback: wait for user interaction
                 this.setupUserInteractionListener();
             });
         }, 100);
     }
 
     setupUserInteractionListener() {
+        console.log("🎵 Waiting for user interaction to start audio...");
         const handleUserInteraction = () => {
             this.hasUserInteracted = true;
+            
+            // Start menu audio on first interaction
+            if (!this.autoplayEnabled) {
+                this.autoplayEnabled = true;
+                this.menuAudio.muted = false;
+                this.gameAudio.muted = false;
+                this.gameOverAudio.muted = false;
+                
+                this.menuAudio.play().then(() => {
+                    console.log("🎵 Audio started after user interaction");
+                }).catch(err => {
+                    console.warn("Audio failed even after interaction:", err);
+                });
+            }
             
             // Play pending menu music if waiting with smooth fade in
             if (this.pendingMenuMusic) {
@@ -212,12 +243,18 @@ export class Music {
     }
 
     playMenu() {
+        // Don't do anything if autoplay hasn't initialized yet (it will start menu audio)
+        if (!this.autoplayEnabled) {
+            console.log("🎵 Menu will play after autoplay initializes");
+            return;
+        }
+        
         // Find currently playing audio to fade from
         let currentAudio = null;
         if (!this.gameOverAudio.paused) currentAudio = this.gameOverAudio;
         if (!this.gameAudio.paused) currentAudio = this.gameAudio;
         
-        // Start menu music automatically
+        // Start menu music automatically - no user interaction check
         this.crossFade(currentAudio, this.menuAudio, this.targetVolumes.menu);
     }
 
@@ -226,7 +263,7 @@ export class Music {
         let currentAudio = null;
         if (!this.menuAudio.paused) currentAudio = this.menuAudio;
         
-        // Cross-fade to game music
+        // Cross-fade to game music - no user interaction check
         this.crossFade(currentAudio, this.gameAudio, this.targetVolumes.game);
     }
 

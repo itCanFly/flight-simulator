@@ -26,7 +26,7 @@ export class Game {
         this.scoreInterval = 10;  // seconds
 
         this.verticalVelocity = 0;
-        this.gravity = -0.004;
+        this.gravity = -0.002;
         this.liftStrength = 0.009;
         this.forwardSpeed = 0;
         
@@ -68,7 +68,7 @@ export class Game {
         this.hasTakenOff = false;
 
         // Audio warning system
-        this.FUEL_WARNING_THRESHOLD = 15; // Fuel percentage for warning
+        this.FUEL_WARNING_THRESHOLD = 10; // Fuel percentage for warning (plays audio at 10%)
         this.hasPlayedFuelWarning = false;
         this.hasPlayedAltitudeWarning = false;
 

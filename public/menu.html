@@ -866,6 +866,53 @@
     </div>
 
     <script>
+        // Menu background music
+        const menuMusic = new Audio('./assets/audio/before_game_starts.mp3');
+        menuMusic.loop = true;
+        menuMusic.volume = 0.3;
+        
+        // Start menu music with muted autoplay trick
+        function startMenuMusic() {
+            menuMusic.muted = true;
+            menuMusic.play().then(() => {
+                console.log("🎵 Menu music started");
+                // Unmute after a brief delay
+                setTimeout(() => {
+                    menuMusic.muted = false;
+                    console.log("🎵 Menu music unmuted");
+                }, 100);
+            }).catch(err => {
+                console.log("🎵 Menu music needs user interaction");
+                // Setup one-time interaction listener
+                const startOnInteraction = () => {
+                    menuMusic.muted = false;
+                    menuMusic.play().catch(e => console.warn("Menu music failed:", e));
+                    document.removeEventListener('click', startOnInteraction);
+                    document.removeEventListener('keydown', startOnInteraction);
+                };
+                document.addEventListener('click', startOnInteraction);
+                document.addEventListener('keydown', startOnInteraction);
+            });
+        }
+        
+        // Start music when page loads
+        window.addEventListener('load', () => {
+            setTimeout(startMenuMusic, 100);
+        });
+        
+        // Button click sound
+        const buttonAudio = new Audio('./assets/audio/button_sound.mp3');
+        buttonAudio.volume = 0.4;
+        
+        function playButtonSound() {
+            try {
+                buttonAudio.currentTime = 0;
+                buttonAudio.play().catch(err => console.warn("Button audio playback failed:", err));
+            } catch (e) {
+                console.warn("Button audio error:", e);
+            }
+        }
+
         // Mobile menu toggle
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
         const navMenu = document.getElementById('navMenu');
@@ -888,12 +935,14 @@
 
         // Open audio settings popup
         audioSettingsBtn.addEventListener('click', (e) => {
+            playButtonSound();
             e.preventDefault();
             audioPopup.classList.add('active');
         });
 
         // Close audio settings popup
         closeAudioPopup.addEventListener('click', () => {
+            playButtonSound();
             audioPopup.classList.remove('active');
         });
 
@@ -907,43 +956,123 @@
         // Master Volume
         const masterVolume = document.getElementById('masterVolume');
         const masterVolumeValue = document.getElementById('masterVolumeValue');
+        
+        // Load saved settings
+        const savedMasterVolume = localStorage.getItem('masterVolume') || 80;
+        const savedMusicVolume = localStorage.getItem('musicVolume') || 70;
+        const savedSfxVolume = localStorage.getItem('sfxVolume') || 90;
+        const savedBgMusic = localStorage.getItem('bgMusicEnabled') !== 'false';
+        const savedMuteAll = localStorage.getItem('muteAll') === 'true';
+        
+        // Apply saved settings
+        masterVolume.value = savedMasterVolume;
+        masterVolumeValue.textContent = savedMasterVolume + '%';
+        
         masterVolume.addEventListener('input', (e) => {
-            masterVolumeValue.textContent = e.target.value + '%';
+            const value = e.target.value;
+            masterVolumeValue.textContent = value + '%';
+            // Apply master volume to all audio
+            const masterVol = value / 100;
+            const musicVol = (musicVolume.value / 100) * masterVol;
+            menuMusic.volume = musicVol;
+            buttonAudio.volume = (sfxVolume.value / 100) * masterVol * 0.4;
         });
 
         // Music Volume
         const musicVolume = document.getElementById('musicVolume');
         const musicVolumeValue = document.getElementById('musicVolumeValue');
+        musicVolume.value = savedMusicVolume;
+        musicVolumeValue.textContent = savedMusicVolume + '%';
+        
         musicVolume.addEventListener('input', (e) => {
-            musicVolumeValue.textContent = e.target.value + '%';
+            const value = e.target.value;
+            musicVolumeValue.textContent = value + '%';
+            // Apply music volume to menu music
+            const masterVol = masterVolume.value / 100;
+            const musicVol = (value / 100) * masterVol;
+            menuMusic.volume = musicVol;
         });
 
         // SFX Volume
         const sfxVolume = document.getElementById('sfxVolume');
         const sfxVolumeValue = document.getElementById('sfxVolumeValue');
+        sfxVolume.value = savedSfxVolume;
+        sfxVolumeValue.textContent = savedSfxVolume + '%';
+        
         sfxVolume.addEventListener('input', (e) => {
-            sfxVolumeValue.textContent = e.target.value + '%';
+            const value = e.target.value;
+            sfxVolumeValue.textContent = value + '%';
+            // Apply SFX volume to button sounds
+            const masterVol = masterVolume.value / 100;
+            buttonAudio.volume = (value / 100) * masterVol * 0.4;
         });
 
         // Background Music Toggle
         const bgMusicToggle = document.getElementById('bgMusicToggle');
         const bgMusicStatus = document.getElementById('bgMusicStatus');
+        
+        // Apply saved background music setting
+        if (!savedBgMusic) {
+            bgMusicToggle.classList.remove('active');
+            bgMusicStatus.textContent = 'Off';
+            menuMusic.pause();
+        }
+        
         bgMusicToggle.addEventListener('click', () => {
+            playButtonSound();
             bgMusicToggle.classList.toggle('active');
-            bgMusicStatus.textContent = bgMusicToggle.classList.contains('active') ? 'On' : 'Off';
+            const isActive = bgMusicToggle.classList.contains('active');
+            bgMusicStatus.textContent = isActive ? 'On' : 'Off';
+            
+            // Control menu music
+            if (isActive) {
+                menuMusic.play().catch(err => console.warn("Menu music play failed:", err));
+            } else {
+                menuMusic.pause();
+            }
         });
 
         // Mute All Toggle
         const muteAllToggle = document.getElementById('muteAllToggle');
         const muteAllStatus = document.getElementById('muteAllStatus');
+        
+        // Apply saved mute all setting
+        if (savedMuteAll) {
+            muteAllToggle.classList.add('active');
+            muteAllStatus.textContent = 'On';
+            menuMusic.muted = true;
+            buttonAudio.muted = true;
+        }
+        
         muteAllToggle.addEventListener('click', () => {
+            playButtonSound();
             muteAllToggle.classList.toggle('active');
-            muteAllStatus.textContent = muteAllToggle.classList.contains('active') ? 'On' : 'Off';
+            const isActive = muteAllToggle.classList.contains('active');
+            muteAllStatus.textContent = isActive ? 'On' : 'Off';
+            
+            // Mute/unmute all audio
+            menuMusic.muted = isActive;
+            buttonAudio.muted = isActive;
+            
+            // If muting, turn off background music toggle
+            if (isActive && bgMusicToggle.classList.contains('active')) {
+                bgMusicToggle.classList.remove('active');
+                bgMusicStatus.textContent = 'Off';
+            }
         });
 
         // Save Settings
         const saveAudioSettings = document.getElementById('saveAudioSettings');
         saveAudioSettings.addEventListener('click', () => {
+            playButtonSound();
+            
+            // Save all settings to localStorage
+            localStorage.setItem('masterVolume', masterVolume.value);
+            localStorage.setItem('musicVolume', musicVolume.value);
+            localStorage.setItem('sfxVolume', sfxVolume.value);
+            localStorage.setItem('bgMusicEnabled', bgMusicToggle.classList.contains('active'));
+            localStorage.setItem('muteAll', muteAllToggle.classList.contains('active'));
+            
             alert('Audio settings saved successfully!');
             audioPopup.classList.remove('active');
         });
@@ -951,25 +1080,45 @@
         // Reset Settings
         const resetAudioSettings = document.getElementById('resetAudioSettings');
         resetAudioSettings.addEventListener('click', () => {
+            playButtonSound();
+            
+            // Reset to defaults
             masterVolume.value = 80;
             masterVolumeValue.textContent = '80%';
             musicVolume.value = 70;
             musicVolumeValue.textContent = '70%';
             sfxVolume.value = 90;
             sfxVolumeValue.textContent = '90%';
+            
             if (!bgMusicToggle.classList.contains('active')) {
                 bgMusicToggle.classList.add('active');
                 bgMusicStatus.textContent = 'On';
+                menuMusic.play().catch(err => console.warn("Menu music play failed:", err));
             }
             if (muteAllToggle.classList.contains('active')) {
                 muteAllToggle.classList.remove('active');
                 muteAllStatus.textContent = 'Off';
+                menuMusic.muted = false;
+                buttonAudio.muted = false;
             }
+            
+            // Apply reset volumes
+            const masterVol = 0.8;
+            menuMusic.volume = 0.7 * masterVol;
+            buttonAudio.volume = 0.9 * masterVol * 0.4;
+            
+            // Save reset values
+            localStorage.setItem('masterVolume', 80);
+            localStorage.setItem('musicVolume', 70);
+            localStorage.setItem('sfxVolume', 90);
+            localStorage.setItem('bgMusicEnabled', true);
+            localStorage.setItem('muteAll', false);
         });
         
         // Level selection functionality
         document.querySelectorAll('.dropdown-item').forEach(item => {
             item.addEventListener('click', (e) => {
+                playButtonSound();
                 e.preventDefault();
 
                 const levelText = item.textContent.trim();

@@ -4,7 +4,7 @@ import { triggerExplosion } from '../shaders/explosion.js';
 
 export function handleAltitude(game) {
             // Altitude warning system
-    const ALTITUDE_WARNING_THRESHOLD = 2000; // Warning when getting too high
+    const ALTITUDE_WARNING_THRESHOLD = 1500; // Warning when getting too high
     const LOW_ALTITUDE_WARNING = 100; // warn when close to ground after takeoff
 
     const y = game.plane.position.y;
@@ -40,11 +40,9 @@ export function handleAltitude(game) {
     try {
         if (game.hasTakenOff && y <= LOW_ALTITUDE_WARNING && y > game.CRASH_THRESHOLD) {
             HUD.showLowAltitude();
-            if (!game.hasPlayedAltitudeWarning) { game.music.playCrash(); game.hasPlayedAltitudeWarning = true; }
+            // Removed crash sound - only play on actual crash/explosion
         } else {
             HUD.hideLowAltitude();
-            // Reset flag so it can play again later
-            game.hasPlayedAltitudeWarning = false;
         }
     } catch (e) {
         // ignore when HUD not available
@@ -107,6 +105,9 @@ export function handleGroundCollision(game) {
         
         // Trigger explosion at plane's position
         triggerExplosion(game.plane.position.clone());
+        
+        // HIDE THE PLANE IMMEDIATELY - make it invisible so it doesn't show under explosion
+        game.plane.visible = false;
         
         game.music.playCrash();
         
