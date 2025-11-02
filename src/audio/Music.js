@@ -2,17 +2,17 @@
 export class Music {
     constructor() {
         // Core audio files (these should exist)
-        this.menuAudio = new Audio('./assets/audio/before_game_starts.mp3');
-        this.gameAudio = new Audio('./assets/audio/main_game_sound.mp3');
-        this.gameOverAudio = new Audio('./assets/audio/main_game_sound.mp3');
-        this.crashAudio = new Audio('./assets/audio/crash.mp3');
+        this.menuAudio = new Audio('assets/audio/before_game_starts.mp3');
+        this.gameAudio = new Audio('assets/audio/main_game_sound.mp3');
+        this.gameOverAudio = new Audio('assets/audio/main_game_sound.mp3');
+        this.crashAudio = new Audio('assets/audio/crash.mp3');
         
         // Optional audio files (may not exist yet)
-        this.fuelWarningAudio = this.createOptionalAudio('./assets/audio/fuel_warning.mp3');
-        this.refuelAudio = this.createOptionalAudio('./assets/audio/refuel_sound.mp3');
-        this.buttonAudio = this.createOptionalAudio('./assets/audio/button_sound.mp3');
-        this.achievedAudio = this.createOptionalAudio('./assets/audio/achieved_sound.mp3');
-        this.planeMovementAudio = this.createOptionalAudio('./assets/audio/plane_moving_sound.mp3');
+        this.fuelWarningAudio = this.createOptionalAudio('assets/audio/fuel_warning.mp3');
+        this.refuelAudio = this.createOptionalAudio('assets/audio/refuel_sound.mp3');
+        this.buttonAudio = this.createOptionalAudio('assets/audio/button_sound.mp3');
+        this.achievedAudio = this.createOptionalAudio('assets/audio/achieved_sound.mp3');
+        this.planeMovementAudio = this.createOptionalAudio('assets/audio/plane_moving_sound.mp3');
 
         // Configure core audio with error handling
         this.menuAudio.preload = 'auto';

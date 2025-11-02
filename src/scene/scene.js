@@ -8,7 +8,7 @@ export function loadGroundModel(game){
     return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
         loader.load(
-            '/assets/models/ground_plane.glb',
+            'assets/models/ground_plane.glb',
             (gltf) => {
                 const model = gltf.scene;
                 model.traverse(obj => {
@@ -54,7 +54,7 @@ export function loadRunwayModel(game, position = new THREE.Vector3(0, 0, 0)){
     return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
         loader.load(
-            '/assets/models/runway.glb',
+            'assets/models/runway.glb',
             (gltf) => {
                 const model = gltf.scene;
                 model.traverse(obj => {
@@ -136,7 +136,7 @@ export function loadSkybox(scene, options = {}) {
     return new Promise((resolve, reject) => {
         // Loads the GLB skybox model and adds it to the scene.
         // options: { path, scale, name }
-        const { path = '/assets/models/skybox.glb', scale = 1000, name = 'SkyboxModel' } = options;
+        const { path = 'assets/models/skybox.glb', scale = 1000, name = 'SkyboxModel' } = options;
 
         // remove previous skybox if any
         const prev = scene.getObjectByName(name);

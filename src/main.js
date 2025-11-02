@@ -64,7 +64,7 @@ const loadInterval = setInterval(() => {
         clearInterval(loadInterval);
         setTimeout(() => {
             loadingScreen.style.display = 'none';
-            window.location.href = "/menu.html";
+            window.location.href = "./menu.html";
         }, 500);
     }
 }, 95);
