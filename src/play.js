@@ -504,6 +504,7 @@ if (quitButton) {
 
 if (restartButton) {
     restartButton.addEventListener('click', () => {
+        console.log("restart failed mission")
         myGame.music.playButton();
         cancelScheduledGameOver();
         if (gameOverPopup) gameOverPopup.style.display = 'none';
