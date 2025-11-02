@@ -108,7 +108,7 @@ try { window.addEventListener('load', _bindTouchControls); } catch (e) {}
 // Asset Loading & Game Initialization
 // -----------------
 (async () => {
-    console.log('🎮 Initializing flight simulator...');
+    console.log(' Initializing flight simulator...');
     
     // Get loading screen elements (matching index.html style)
     const loadingScreen = document.getElementById('assetLoadingScreen');
@@ -150,48 +150,307 @@ try { window.addEventListener('load', _bindTouchControls); } catch (e) {}
 })();
 
 myGame.level = localStorage.getItem('selectedLevel');
-var dialogues = [
-            
+
+// Mission briefing system
+const MISSIONS = {
+    "1": {
+        objective: "Transport cargo from OR Tambo International Airport to Cape Town International Airport. You're carrying 47 boxes of wigs, hot sauce, and one precious disco ball. Handle with care!",
+        dialogue: [
             {
                 character: "Mr Ingram",
                 avatar: "",
-                text: "Hello there! You must be Json right?"
+                text: "Hello there! You must be Json right?",
+                isPlayer: false
             },
-            
             {
                 character: "Jason",
                 avatar: "",
-                text: "Uh... it's actually Jason, sir."
+                text: "Uh... it's actually Jason, sir.",
+                isPlayer: true
             },
             {
                 character: "Mr Ingram",
                 avatar: "",
-                text: "Json... Jason... JavaScript... who can keep track these days? Listen, I need you to transport cargo from OR Tambo to Cape Town!"
+                text: "Json... Jason... JavaScript... who can keep track these days? Listen, I need you to transport cargo from OR Tambo to Cape Town!",
+                isPlayer: false
             },
-            
             {
                 character: "Jason",
                 avatar: "",
-                text: "What kind of cargo?"
+                text: "What kind of cargo?",
+                isPlayer: true
             },
-            
             {
                 character: "Mr Ingram",
                 avatar: "",
-                text: "47 boxes of wigs, hot sauce, and one VERY precious disco ball. If that disco ball gets scratched, you're fired, Json!"
+                text: "47 boxes of wigs, hot sauce, and one VERY precious disco ball. If that disco ball gets scratched, you're fired, Json!",
+                isPlayer: false
             },
-            
             {
                 character: "Jason",
                 avatar: "",
-                text: "My name is JASON! But fine, I'll do it."
+                text: "My name is JASON! But fine, I'll do it.",
+                isPlayer: true
             },
             {
                 character: "Mr Ingram",
                 avatar: "",
-                text: "Perfect! Now get to that plane before my hot sauce expires. GO GO GO!"
+                text: "Perfect! Now get to that plane before my hot sauce expires. GO GO GO!",
+                isPlayer: false
             }
-        ];
+        ]
+    },
+    "2": {
+        objective: "Fly to Durban with DOUBLE the cargo and THREE disco balls! Navigate through storm clouds and deliver the wigs safely. The disco balls are counting on you!",
+        dialogue: [
+            {
+                character: "Mr Ingram",
+                avatar: "",
+                text: "Jason! JASON! You're back! The disco ball survived! I'm honestly shocked.",
+                isPlayer: false
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "Of course it survived. I'm a professional pilot, Mr. Ingram.",
+                isPlayer: true
+            },
+            {
+                character: "Mr Ingram",
+                avatar: "",
+                text: "Professional? You took 3 hours for a 2-hour flight! But whatever... I have ANOTHER mission for you.",
+                isPlayer: false
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "Already? I just landed! Can I at least get some coffee first?",
+                isPlayer: true
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "*sighs* It's Jason... and THREE disco balls? Are you running a mobile nightclub or something?",
+                isPlayer: true
+            },
+            {
+                character: "Mr Ingram",
+                avatar: "",
+                text: "Don't ask questions! Just FLY! And this time, try to avoid those storm clouds. They're bad for the wigs!",
+                isPlayer: false
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "Wait, what storm clouds? You didn't mention—",
+                isPlayer: true
+            },
+            {
+                character: "Mr Ingram",
+                avatar: "",
+                text: "No time for chitchat! The disco balls are waiting! GO GO GO!",
+                isPlayer: false
+            }
+        ]
+    },
+    "3": {
+        objective: "International flight to Madagascar! Transport 100 boxes, FIVE disco balls, and a live flamingo named Gerald. This is your final test - make it count!",
+        dialogue: [
+            {
+                character: "Mr Ingram",
+                avatar: "",
+                text: "JASON! My boy! You've done the impossible! Those three disco balls are GLEAMING!",
+                isPlayer: false
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "Thank you, Mr. Ingram. Finally, you got my name right!",
+                isPlayer: true
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "You literally just said my name correctly... *sighs* What's the mission?",
+                isPlayer: true
+            },
+            {
+                character: "Mr Ingram",
+                avatar: "",
+                text: "International flight to Madagascar! 100 boxes, FIVE disco balls, and get this... a live flamingo named Gerald!",
+                isPlayer: false
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "A LIVE FLAMINGO?! Mr. Ingram, I'm a cargo pilot, not a zoo keeper!",
+                isPlayer: true
+            },
+            {
+                character: "Mr Ingram",
+                avatar: "",
+                text: "Gerald is VERY important to me. He's the star of my new disco-themed wildlife sanctuary! Don't let me down!",
+                isPlayer: false
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "This is absolutely insane. What if Gerald doesn't like flying?",
+                isPlayer: true
+            },
+            {
+                character: "Jason",
+                avatar: "",
+                text: "For the last time, it's JASON! ...but fine. Let's do this.",
+                isPlayer: true
+            },
+            {
+                character: "Mr Ingram",
+                avatar: "",
+                text: "That's the spirit! Fly safe, watch the cargo, and remember... Gerald is counting on you! GO GO GO!",
+                isPlayer: false
+            }
+        ]
+    }
+};
+
+// Store current mission in localStorage for viewing later
+function saveMissionLog(level) {
+    const mission = MISSIONS[level];
+    if (mission) {
+        localStorage.setItem('currentMission', JSON.stringify({
+            level: level,
+            objective: mission.objective,
+            dialogue: mission.dialogue
+        }));
+    }
+}
+
+// Initialize mission briefing
+function initMissionBriefing() {
+    const level = myGame.level || "1";
+    const mission = MISSIONS[level];
+    
+    if (!mission) {
+        console.error('Mission not found for level:', level);
+        return;
+    }
+
+    // Set level number
+    const levelNum = document.getElementById('briefingLevelNum');
+    if (levelNum) levelNum.textContent = level;
+
+    // Set objective
+    const objectiveText = document.getElementById('missionObjectiveText');
+    if (objectiveText) objectiveText.textContent = mission.objective;
+
+    // Build dialogue content
+    const dialogueContent = document.getElementById('dialogueContent');
+    if (dialogueContent) {
+        dialogueContent.innerHTML = '';
+        mission.dialogue.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `dialogue-message ${msg.isPlayer ? 'player' : ''}`;
+            msgDiv.innerHTML = `
+                <div class="dialogue-character">${msg.character}</div>
+                <div class="dialogue-text">${msg.text}</div>
+            `;
+            dialogueContent.appendChild(msgDiv);
+        });
+    }
+
+    // Save mission to log
+    saveMissionLog(level);
+
+    // Show the mission briefing overlay
+    const overlay = document.getElementById('missionBriefingOverlay');
+    if (overlay) overlay.classList.remove('hidden');
+}
+
+// Toggle dialogue expansion
+const toggleDialogueBtn = document.getElementById('toggleDialogue');
+const dialogueContent = document.getElementById('dialogueContent');
+
+if (toggleDialogueBtn && dialogueContent) {
+    toggleDialogueBtn.addEventListener('click', () => {
+        myGame.music.playButton();
+        toggleDialogueBtn.classList.toggle('active');
+        dialogueContent.classList.toggle('expanded');
+    });
+}
+
+// View full dialogue button
+const viewFullDialogueBtn = document.getElementById('viewFullDialogueBtn');
+if (viewFullDialogueBtn) {
+    viewFullDialogueBtn.addEventListener('click', () => {
+        myGame.music.playButton();
+        if (!toggleDialogueBtn.classList.contains('active')) {
+            toggleDialogueBtn.classList.add('active');
+            dialogueContent.classList.add('expanded');
+        }
+        // Scroll to dialogue section
+        dialogueContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+}
+
+// Start mission button
+const startMissionBtn = document.getElementById('startMissionBtn');
+if (startMissionBtn) {
+    startMissionBtn.addEventListener('click', () => {
+        myGame.music.playButton();
+        // Hide mission briefing
+        const overlay = document.getElementById('missionBriefingOverlay');
+        if (overlay) overlay.classList.add('hidden');
+        
+        // Show gauges and game elements
+        const gauges = document.getElementById('gauges');
+        if (gauges) gauges.style.display = 'flex';
+
+        // Show mission log button
+        const missionLogBtn = document.getElementById('viewMissionLogBtn');
+        if (missionLogBtn) missionLogBtn.classList.add('visible');
+
+        // Start the game
+        start(myGame);
+    });
+}
+
+// Close mission button (X button)
+const closeMissionBtn = document.getElementById('closeMissionBtn');
+if (closeMissionBtn) {
+    closeMissionBtn.addEventListener('click', () => {
+        myGame.music.playButton();
+        // Hide mission briefing
+        const overlay = document.getElementById('missionBriefingOverlay');
+        if (overlay) overlay.classList.add('hidden');
+        
+        // Show gauges and game elements
+        const gauges = document.getElementById('gauges');
+        if (gauges) gauges.style.display = 'flex';
+
+        // Show mission log button
+        const missionLogBtn = document.getElementById('viewMissionLogBtn');
+        if (missionLogBtn) missionLogBtn.classList.add('visible');
+
+        // Start the game
+        start(myGame);
+    });
+}
+
+// View mission log button (to re-open mission briefing during gameplay)
+const viewMissionLogBtn = document.getElementById('viewMissionLogBtn');
+if (viewMissionLogBtn) {
+    viewMissionLogBtn.addEventListener('click', () => {
+        myGame.music.playButton();
+        const overlay = document.getElementById('missionBriefingOverlay');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+        }
+    });
+}
+
+// Keep old dialogue variables for compatibility (but won't be used)
+var dialogues = [];
 
 let currentDialogue = 0;
 const dialogueText = document.getElementById('dialogueText');
@@ -200,6 +459,7 @@ const characterAvatar = document.getElementById('characterAvatar');
 const nextButton = document.getElementById('nextButton');
 const skipButton = document.getElementById('skipButton');
 
+// Old skip button handler (kept for backward compatibility if old UI exists)
 if (skipButton) {
     skipButton.addEventListener('click', () => {
         myGame.music.playButton();
@@ -211,135 +471,13 @@ if (skipButton) {
         start(myGame);
     });
 }
+
 window.addEventListener('load', () => {
-    // Default to level 1 if no saved level is found
-    if (myGame.level) {
-        const lvlEl = document.getElementById('levelInfo'); if (lvlEl) lvlEl.textContent = `Level: ${myGame.level}`;
-
-        // If level is 2, change the first dialogue message
-        if (myGame.level === "2") {
-             dialogues = [
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "Jason! JASON! You're back! The disco ball survived! I'm honestly shocked."
-    },
-    {
-        character: "Jason",
-        avatar: "",
-        text: "Of course it survived. I'm a professional pilot, Mr. Ingram."
-    },
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "Professional? You took 3 hours for a 2-hour flight! But whatever... I have ANOTHER mission for you."
-    },
-    {
-        character: "Jason",
-        avatar: "",
-        text: "Already? I just landed! Can I at least get some coffee first?"
-    },
-    /* Mr Ingram line removed (Json joke)
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "Coffee is for WINNERS, Json! This time you're flying to Durban. Same cargo but DOUBLE the boxes and THREE disco balls!"
-    },
-    */
-    {
-        character: "Jason",
-        avatar: "",
-        text: "*sighs* It's Jason... and THREE disco balls? Are you running a mobile nightclub or something?"
-    },
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "Don't ask questions! Just FLY! And this time, try to avoid those storm clouds. They're bad for the wigs!"
-    },
-    {
-        character: "Jason",
-        avatar: "",
-        text: "Wait, what storm clouds? You didn't mention—"
-    },
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "No time for chitchat! The disco balls are waiting! GO GO GO!"
-    }
-            ];
-        }
-        else if(myGame.level == "3"){
-             dialogues = [
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "JASON! My boy! You've done the impossible! Those three disco balls are GLEAMING!"
-    },
-    {
-        character: "Jason",
-        avatar: "",
-        text: "Thank you, Mr. Ingram. Finally, you got my name right!"
-    },
-    /* Mr Ingram line removed (Json joke)
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "Don't get emotional on me, Json. We have ONE FINAL MISSION. The BIG ONE!"
-    },
-    */
-    {
-        character: "Jason",
-        avatar: "",
-        text: "You literally just said my name correctly... *sighs* What's the mission?"
-    },
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "International flight to Madagascar! 100 boxes, FIVE disco balls, and get this... a live flamingo named Gerald!"
-    },
-    {
-        character: "Jason",
-        avatar: "",
-        text: "A LIVE FLAMINGO?! Mr. Ingram, I'm a cargo pilot, not a zoo keeper!"
-    },
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "Gerald is VERY important to me. He's the star of my new disco-themed wildlife sanctuary! Don't let me down!"
-    },
-    {
-        character: "Jason",
-        avatar: "",
-        text: "This is absolutely insane. What if Gerald doesn't like flying?"
-    },
-    /* Mr Ingram line removed (Json joke)
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "Then play him some disco music! Now GET GOING! This is your final test, Json! Make me proud!"
-    },
-    */
-    {
-        character: "Jason",
-        avatar: "",
-        text: "For the last time, it's JASON! ...but fine. Let's do this."
-    },
-    {
-        character: "Mr Ingram",
-        avatar: "",
-        text: "That's the spirit! Fly safe, watch the cargo, and remember... Gerald is counting on you! GO GO GO!"
-    }
-            ];
-        }
-    } else {
-        const lvlEl = document.getElementById('levelInfo'); if (lvlEl) lvlEl.textContent = 'Level: 1';
-    }
-
-    const current = dialogues[currentDialogue];
-    if (characterName) characterName.textContent = current.character;
-    if (characterAvatar) characterAvatar.textContent = current.avatar;
-    if (dialogueText) dialogueText.textContent = current.text;
+    // Initialize the mission briefing system
+    initMissionBriefing();
 });
+
+// Old next button handler (kept for backward compatibility if old UI exists)
 if (nextButton) nextButton.addEventListener('click', () => {
     myGame.music.playButton();
     currentDialogue++;

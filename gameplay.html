@@ -5,10 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
        <link rel="stylesheet" href="./index.css">
        <link rel="stylesheet" href="./src/styles/uiManager.css">
+       <link rel="stylesheet" href="./src/styles/missionBriefing.css">
     <title>flight-simulator</title>
   </head>
   <body>
     <div id="gameContainer">
+        <!-- Mission Briefing Overlay -->
+        <div id="missionBriefingOverlay">
+            <div class="mission-briefing-container">
+                <button class="mission-close-btn" id="closeMissionBtn" title="Close and start mission">✕</button>
+                <div class="mission-header">
+                    <h1> Mission Briefing</h1>
+                    <div class="mission-level">Level <span id="briefingLevelNum">1</span></div>
+                </div>
+                
+                <div class="mission-content">
+                    <div class="mission-objective">
+                        <h2> Objective</h2>
+                        <p id="missionObjectiveText">Loading mission details...</p>
+                    </div>
+                    
+                    <div class="mission-dialogue-section">
+                        <button class="mission-dialogue-toggle" id="toggleDialogue">
+                            <span> View Mission Dialogue (Optional)</span>
+                            <span class="toggle-icon">▼</span>
+                        </button>
+                        <div class="mission-dialogue-content" id="dialogueContent">
+                            <!-- Dialogue messages will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mission-actions">
+                    <button class="mission-btn mission-btn-primary" id="startMissionBtn">
+                         Start Mission
+                    </button>
+                    <button class="mission-btn mission-btn-secondary" id="viewFullDialogueBtn">
+                         Read Full Story
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Mission Log Button (appears after mission starts) -->
+        <button id="viewMissionLogBtn"> Mission Log</button>
+
         <!-- Loading Screen for Assets (matches index.html style) -->
         <div id="assetLoadingScreen">
             <div class="loading-text">Loading Assets</div>

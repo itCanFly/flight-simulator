@@ -1,0 +1,355 @@
+/* Mission Briefing System - Matching Game Style */
+#missionBriefingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(8px);
+}
+
+#missionBriefingOverlay.hidden {
+    display: none;
+}
+
+.mission-briefing-container {
+    width: min(920px, 90%);
+    max-width: 980px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(5,10,20,0.95), rgba(11,22,35,0.95));
+    border: 2px solid rgba(255,255,255,0.04);
+    box-shadow: 0 30px 80px rgba(2,6,23,0.8), inset 0 1px 0 rgba(255,255,255,0.02);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.mission-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: rgba(30,41,59,0.8);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: #cbd5e1;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    line-height: 1;
+}
+
+.mission-close-btn:hover {
+    background: rgba(239,68,68,0.2);
+    border-color: rgba(239,68,68,0.4);
+    color: #fca5a5;
+    transform: scale(1.1);
+}
+
+.mission-header {
+    text-align: center;
+    padding-bottom: 18px;
+    border-bottom: 2px solid rgba(255,255,255,0.04);
+}
+
+.mission-header h1 {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #0ea5e9;
+    letter-spacing: 0.12em;
+    text-shadow: 0 8px 30px rgba(14,165,233,0.2), 0 0 18px rgba(14,165,233,0.15);
+    margin: 0;
+}
+
+.mission-header .mission-level {
+    color: #cbd5e1;
+    font-size: 1.1rem;
+    margin-top: 8px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.mission-content {
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.mission-objective {
+    background: linear-gradient(180deg, rgba(14,165,233,0.08), rgba(2,132,199,0.05));
+    border-left: 4px solid #0ea5e9;
+    padding: 20px 24px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.4);
+}
+
+.mission-objective h2 {
+    color: #0ea5e9;
+    font-size: 1.4rem;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.mission-objective p {
+    color: #e2e8f0;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin: 0;
+    font-weight: 500;
+}
+
+.mission-dialogue-section {
+    margin-bottom: 8px;
+}
+
+.mission-dialogue-toggle {
+    background: linear-gradient(180deg, rgba(30,41,59,0.8), rgba(15,23,42,0.8));
+    border: 1px solid rgba(255,255,255,0.06);
+    color: #cbd5e1;
+    padding: 16px 24px;
+    font-size: 1.05rem;
+    cursor: pointer;
+    border-radius: 10px;
+    width: 100%;
+    text-align: left;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+}
+
+.mission-dialogue-toggle:hover {
+    background: linear-gradient(180deg, rgba(51,65,85,0.8), rgba(30,41,59,0.8));
+    border-color: rgba(59,130,246,0.3);
+    color: #3b82f6;
+}
+
+.mission-dialogue-toggle .toggle-icon {
+    font-size: 1.3em;
+    transition: transform 0.3s ease;
+    color: #0ea5e9;
+}
+
+.mission-dialogue-toggle.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.mission-dialogue-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: linear-gradient(180deg, rgba(11,18,32,0.6), rgba(7,16,32,0.6));
+    border-radius: 0 0 10px 10px;
+    margin-top: -2px;
+}
+
+.mission-dialogue-content.expanded {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.03);
+    border-top: none;
+}
+
+.dialogue-message {
+    padding: 16px 20px;
+    margin: 12px 14px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(30,41,59,0.5), rgba(15,23,42,0.5));
+    border-left: 3px solid rgba(148,163,184,0.3);
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+.dialogue-message.player {
+    background: linear-gradient(180deg, rgba(59,130,246,0.15), rgba(37,99,235,0.1));
+    border-left: 3px solid #3b82f6;
+}
+
+.dialogue-character {
+    color: #94a3b8;
+    font-weight: 800;
+    font-size: 1rem;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+}
+
+.dialogue-message.player .dialogue-character {
+    color: #0ea5e9;
+}
+
+.dialogue-text {
+    color: #e2e8f0;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+.mission-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    padding-top: 12px;
+    border-top: 2px solid rgba(255,255,255,0.04);
+}
+
+.mission-btn {
+    padding: 12px 32px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.05em;
+}
+
+.mission-btn-primary {
+    background: linear-gradient(180deg, #0ea5e9, #0284c7);
+    color: #001;
+    box-shadow: 0 8px 28px rgba(2,120,180,0.25);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.mission-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(2,120,180,0.35);
+}
+
+.mission-btn-secondary {
+    background: transparent;
+    color: #cbd5e1;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.mission-btn-secondary:hover {
+    background: linear-gradient(180deg, rgba(30,41,59,0.8), rgba(15,23,42,0.8));
+    border-color: rgba(59,130,246,0.3);
+    color: #3b82f6;
+}
+
+/* View Mission Log Button */
+#viewMissionLogBtn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(30,41,59,0.9);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: #cbd5e1;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 800;
+    z-index: 9999;
+    transition: all 0.3s ease;
+    display: none;
+    letter-spacing: 0.05em;
+}
+
+#viewMissionLogBtn.visible {
+    display: block;
+}
+
+#viewMissionLogBtn:hover {
+    background: linear-gradient(180deg, rgba(51,65,85,0.9), rgba(30,41,59,0.9));
+    border-color: rgba(59,130,246,0.3);
+    color: #0ea5e9;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(14,165,233,0.2);
+}
+
+/* Scrollbar styling for dialogue content */
+.mission-dialogue-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.mission-dialogue-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+.mission-dialogue-content::-webkit-scrollbar-thumb {
+    background: rgba(59,130,246,0.4);
+    border-radius: 4px;
+}
+
+.mission-dialogue-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(59,130,246,0.6);
+}
+
+.mission-briefing-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.mission-briefing-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+}
+
+.mission-briefing-container::-webkit-scrollbar-thumb {
+    background: rgba(59,130,246,0.4);
+    border-radius: 5px;
+}
+
+.mission-briefing-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(59,130,246,0.6);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .mission-briefing-container {
+        width: 95%;
+        max-height: 95vh;
+        padding: 18px;
+    }
+
+    .mission-header h1 {
+        font-size: 2rem;
+    }
+
+    .mission-objective h2 {
+        font-size: 1.2rem;
+    }
+
+    .mission-objective p {
+        font-size: 0.95rem;
+    }
+
+    .mission-actions {
+        flex-direction: column;
+    }
+
+    .mission-btn {
+        width: 100%;
+    }
+
+    #viewMissionLogBtn {
+        top: 10px;
+        right: 10px;
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
+
+    .dialogue-message {
+        padding: 12px 16px;
+        margin: 10px;
+    }
+}
