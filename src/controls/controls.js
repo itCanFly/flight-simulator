@@ -47,7 +47,7 @@ export function updateControls(game) {
     const maxSpeed = 3.0;
     if (keys.KeyW) {
         game.targetForwardSpeed = Math.min(game.targetForwardSpeed + 0.02, maxSpeed);
-        game.stats.fuel -= 0.1;
+        game.stats.fuel -= 0.05;
     }
     if (keys.KeyS) {
         game.targetForwardSpeed = Math.max(game.targetForwardSpeed - 0.02, game.minForwardSpeed);
