@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { win, lose } from '../items/gameflow';
+import { win, gameOver } from '../items/gameflow';
 import { getWaypointsForLevel } from './waypoints';
 import { HUD } from '../ui/hud.js';
 
@@ -133,7 +133,7 @@ export function handleCheckpoints(game) {
     const passedCheckpoints = game.checkpoints.filter(cp => cp.isPassed).length;
 
     const percentPassed = (passedCheckpoints / totalCheckpoints) * 100;
-    const winThreshold = 70 + (game.level*10);
+    const winThreshold = 70 ;
 
     // Check if last checkpoint is passed and evaluate win/lose condition
     if (lastCheckpoint.isPassed){
@@ -142,7 +142,7 @@ export function handleCheckpoints(game) {
             win(game);
         }
         else{
-            lose(game);
+            gameOver(game);
         }
         return; // Exit early to prevent double triggering
     }
