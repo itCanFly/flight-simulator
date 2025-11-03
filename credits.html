@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Credits</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(180deg, #0a1628 0%, #1a2f4d 50%, #0a1628 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+        }
+
+        .credits-container {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            animation: scroll 30s linear infinite;
+            padding: 50px 20px;
+        }
+
+        @keyframes scroll {
+            0% {
+                bottom: -100%;
+            }
+            100% {
+                bottom: 100%;
+            }
+        }
+
+        .section {
+            margin: 80px 0;
+        }
+
+        .section-title {
+            font-size: 2.5em;
+            color: #4da6ff;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 20px rgba(77, 166, 255, 0.5);
+        }
+
+        .name {
+            font-size: 1.8em;
+            color: #ffffff;
+            margin: 20px 0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .asset-item {
+            margin: 30px 0;
+        }
+
+        .asset-name {
+            font-size: 1.6em;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .asset-credit {
+            font-size: 1.2em;
+            color: #80c4ff;
+            font-style: italic;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .game-title {
+            font-size: 3.5em;
+            color: #ffffff;
+            margin-bottom: 60px;
+            text-shadow: 0 0 30px rgba(77, 166, 255, 0.8);
+            letter-spacing: 6px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(77, 166, 255, 0.2);
+            border: 2px solid #4da6ff;
+            color: #ffffff;
+            padding: 12px 24px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(77, 166, 255, 0.4);
+            box-shadow: 0 0 20px rgba(77, 166, 255, 0.6);
+            transform: translateX(-5px);
+        }
+
+        .back-arrow {
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.history.back()">
+        <span class="back-arrow">←</span>
+        <span>Back</span>
+    </button>
+    
+    <audio id="bgMusic" loop autoplay>
+        <source src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js" type="audio/mpeg">
+    </audio>
+    
+    <div class="stars" id="stars"></div>
+    
+    <div class="credits-container">
+        <div class="game-title">GAME CREDITS</div>
+        
+        <div class="section">
+            <div class="section-title">Developers</div>
+            <div class="name">Pretty Mangwadi</div>
+            <div class="name">Jan Moloto</div>
+            <div class="name">Lesiba Kgokolo</div>
+            <div class="name">Ravele Lebopa</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Models</div>
+            
+            <div class="asset-item">
+                <div class="asset-name">Manhattan City</div>
+                <div class="asset-credit">matousekfoto from Sketchfab</div>
+            </div>
+            
+            <div class="asset-item">
+                <div class="asset-name">Bus</div>
+                <div class="asset-credit">vaportrash on Sketchfab</div>
+            </div>
+            
+            <div class="asset-item">
+                <div class="asset-name">Runway</div>
+                <div class="asset-credit">Fot.nat.tr from Sketchfab</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="game-title">Thank You For Playing!</div>
+        </div>
+    </div>
+
+    <script>
+        // Create animated stars in background
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+
+        // Create ambient background music using Web Audio API
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+        
+        function createAmbientMusic() {
+            // Resume audio context on user interaction
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            // Create oscillators for ambient sound
+            const osc1 = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
+            const osc3 = audioContext.createOscillator();
+            
+            const gainNode1 = audioContext.createGain();
+            const gainNode2 = audioContext.createGain();
+            const gainNode3 = audioContext.createGain();
+            const masterGain = audioContext.createGain();
+            
+            // Set frequencies for ambient pad
+            osc1.frequency.value = 110; // A2
+            osc2.frequency.value = 165; // E3
+            osc3.frequency.value = 220; // A3
+            
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+            osc3.type = 'triangle';
+            
+            // Set gains
+            gainNode1.gain.value = 0.05;
+            gainNode2.gain.value = 0.03;
+            gainNode3.gain.value = 0.02;
+            masterGain.gain.value = 0.3;
+            
+            // Connect nodes
+            osc1.connect(gainNode1);
+            osc2.connect(gainNode2);
+            osc3.connect(gainNode3);
+            
+            gainNode1.connect(masterGain);
+            gainNode2.connect(masterGain);
+            gainNode3.connect(masterGain);
+            masterGain.connect(audioContext.destination);
+            
+            // Start oscillators
+            osc1.start();
+            osc2.start();
+            osc3.start();
+            
+            // Add subtle frequency modulation
+            setInterval(() => {
+                const freq1 = 110 + Math.sin(Date.now() / 5000) * 5;
+                const freq2 = 165 + Math.sin(Date.now() / 7000) * 3;
+                osc1.frequency.setValueAtTime(freq1, audioContext.currentTime);
+                osc2.frequency.setValueAtTime(freq2, audioContext.currentTime);
+            }, 100);
+        }
+        
+        // Start music on first user interaction
+        document.addEventListener('click', createAmbientMusic, { once: true });
+        document.addEventListener('keypress', createAmbientMusic, { once: true });
+        
+        // Try to start immediately (may be blocked by browser)
+        setTimeout(createAmbientMusic, 100);
+    </script>
+</body>
+</html>
