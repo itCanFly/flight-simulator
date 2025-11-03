@@ -8,15 +8,15 @@ export function setupScene(level = 1) {
     if (level === 1) {
         // Day
         scene.background = new THREE.Color(0x87ceeb); // Light blue
-        scene.fog = new THREE.FogExp2(0x87ceeb, 0.0008);
+        scene.fog = new THREE.FogExp2(0x87ceeb, 0.0015); // Increased fog density to hide ground model edges
     } else if (level === 2) {
         // Night with moderate fog
         scene.background = new THREE.Color(0x000022); // Deep night sky
-        scene.fog = new THREE.FogExp2(0x000011, 0.0012);
+        scene.fog = new THREE.FogExp2(0x000011, 0.0020); // Increased fog density
     } else {
         // Night with heavy fog (level 3)
         scene.background = new THREE.Color(0x000022); // Deep night sky
-        scene.fog = new THREE.FogExp2(0x000011, 0.0015);
+        scene.fog = new THREE.FogExp2(0x000011, 0.0025); // Increased fog density
     }
 
     return scene;
@@ -196,7 +196,7 @@ export function transitionSceneToLevel(scene, level, currentStars = null, curren
     if (level === 1) {
         // Day
         scene.background = new THREE.Color(0x87ceeb);
-        scene.fog = new THREE.FogExp2(0x87ceeb, 0.0008);
+        scene.fog = new THREE.FogExp2(0x87ceeb, 0.0015); // Increased fog density to hide ground model edges
         
         // Remove stars if they exist
         if (currentStars) {
@@ -212,7 +212,7 @@ export function transitionSceneToLevel(scene, level, currentStars = null, curren
     } else if (level === 2) {
         // Night with moderate fog
         scene.background = new THREE.Color(0x000022);
-        scene.fog = new THREE.FogExp2(0x000011, 0.0012);
+        scene.fog = new THREE.FogExp2(0x000011, 0.0020); // Increased fog density
         
         // Add stars if they don't exist
         if (!currentStars) {
@@ -227,7 +227,7 @@ export function transitionSceneToLevel(scene, level, currentStars = null, curren
     } else {
         // Night with heavy fog (level 3)
         scene.background = new THREE.Color(0x000022);
-        scene.fog = new THREE.FogExp2(0x000011, 0.0015);
+        scene.fog = new THREE.FogExp2(0x000011, 0.0025); // Increased fog density
         
         // Add more stars for level 3
         if (!currentStars) {
