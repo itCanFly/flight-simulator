@@ -1170,20 +1170,20 @@
         function initializeLevelSystem() {
             // TEMPORARY: Reset localStorage to clear unlocked levels
             // Remove this line after running once
-           // localStorage.removeItem('completedLevels');
+           localStorage.removeItem('completedLevels');
             
             // TEMPORARY: Unlock all levels for testing
             // TODO: Remove this line before production
-            //localStorage.setItem('completedLevels', JSON.stringify([1, 2, 3]));
+            localStorage.setItem('completedLevels', JSON.stringify([1, 2, 3]));
             
             // Get completed levels from localStorage (default: only level 1)
             let completedLevels = JSON.parse(localStorage.getItem('completedLevels') || '[1]');
             
-            // Ensure level 1 is always available
-            if (!completedLevels.includes(1)) {
-                completedLevels.push(1);
-                localStorage.setItem('completedLevels', JSON.stringify(completedLevels));
-            }
+            // // Ensure level 1 is always available
+            // if (!completedLevels.includes(1)) {
+            //     completedLevels.push(1);
+            //     localStorage.setItem('completedLevels', JSON.stringify(completedLevels));
+            // }
             
             // Update UI for each level
             document.querySelectorAll('.level-item').forEach(item => {
